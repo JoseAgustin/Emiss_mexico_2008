@@ -9,15 +9,19 @@
 #         Realiza la secuencia de pasos para generar diferentes fechas
 #         del inventario de emisiones.
 #
-set ProcessDir = /home/abraham/Documents/Jalisco
+set ProcessDir = /users/Datos/Documents/Proyectos/EMISIONES/mexico_2008
+echo $ProcessDir
 #
 #  Build the fecha.txt file
 
 @ mes = 3
-@ dia = 8
-while ($dia <= 8)      
-cd $ProcessDir
+@ dia = 9
 
+while ( $dia <= 10 )      
+echo $dia
+cd $PWD
+
+echo $PWD
 #
 if ( -e 04_temis/fecha.txt ) then
 rm 04_temis/fecha.txt
@@ -43,9 +47,9 @@ cd ../04_temis/
 cd ../05_semisM/
 ./MSpatial.exe >& movil.log
 #
-echo 'Biogenic'
-cd ../12_biogenic
-./Btemporal.exe > biog.log&
+#echo 'Biogenic'
+#cd ../12_biogenic
+#./Btemporal.exe > biog.log&
 #
 echo 'Speciation distribution PM2.5'
 #
@@ -68,7 +72,7 @@ echo 'Area '
 #
 echo ' Guarda'
 cd ../10_storage
-./radm2bio.exe   > radm2_bio.log &
+./radm.exe  > radm2_bio.log &
 #./saprc99bio.exe > saprc_bio.log
 @ dia++
 end 

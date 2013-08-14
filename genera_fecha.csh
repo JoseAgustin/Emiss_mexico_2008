@@ -9,7 +9,7 @@
 #         Realiza la secuencia de pasos para generar diferentes fechas
 #         del inventario de emisiones.
 #
-set ProcessDir = /Volumes/Datos/Documents/Proyectos/EMISIONES/DF
+set ProcessDir = $PWD
 #
 #  Build the fecha.txt file
 

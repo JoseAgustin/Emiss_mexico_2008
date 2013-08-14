@@ -37,9 +37,9 @@ ifort -O3 -axAVX -fp-model precise pm25_speci_m.f90 -o spm25m.exe
 ifort -O3 -axAVX -fp-model precise pm25_speci_p.f90 -o spm25p.exe
 cd ..
 cd 10_storage
-set FC=`nc-config --fc`
-set FFL=`nc-config --fflags`
-set FLL=`nc-config --flibs`
+set FC=`nf-config --fc`
+set FFL=`nf-config --fflags`
+set FLL=`nf-config --flibs`
 $FC' '$FFL' '$FLL' '-O2 -axAVX -fp-model precise guarda2bio_nc4.f90 -o radm2bio4.exe
 cd ..
 cd 12_biogenic
