@@ -8,6 +8,8 @@
 #  Proposito:
 #         Realiza la secuencia de pasos para generar diferentes fechas
 #         del inventario de emisiones.
+#  Modificaciones:
+#         14/08/2013 Actualizacion para IE del 2008
 #
 set ProcessDir = /users/Datos/Documents/Proyectos/EMISIONES/mexico_2008
 echo $ProcessDir
@@ -15,19 +17,20 @@ echo $ProcessDir
 #  Build the fecha.txt file
 
 @ mes = 3
-@ dia = 9
+@ dia = 10
 
-while ( $dia <= 10 )      
+while ( $dia <= 10 )
 echo $dia
-cd $PWD
+cd $PWD/04_temis
 
 echo $PWD
 #
-if ( -e 04_temis/fecha.txt ) then
-rm 04_temis/fecha.txt
+if ( -e fecha.txt ) then
+rm fecha.txt
 endif
+#ln -sf anio2008.csv anio2013.csv
 #
-cat << End_Of_File > 04_temis/fecha.txt
+cat << End_Of_File > fecha.txt
 $mes       ! month jan =1 to dec=12
 $dia       ! day in the month (from 1 to 28,30 or 31)
 End_Of_File
@@ -35,6 +38,7 @@ End_Of_File
 echo ' '
 echo '  Mes ='$mes 'DIA '$dia
 #
+cd ..
 echo 'Movil Temporal distribution'
 cd 06_temisM/
 ./Mtemporal.exe > movil.log &
@@ -72,7 +76,7 @@ echo 'Area '
 #
 echo ' Guarda'
 cd ../10_storage
-./radm.exe  > radm2_bio.log &
+./radm2.exe  > radm2_bio.log &
 #./saprc99bio.exe > saprc_bio.log
 @ dia++
 end 
