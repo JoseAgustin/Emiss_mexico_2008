@@ -184,7 +184,7 @@ subroutine lee
 			if(idcg(k).eq.idcf) then
 			  do ih=1,nh
                 ! Emission from g to gmol by 1/WTM
-                eft(i,j,ii,ih,1)=eft(i,j,ii,ih,1)+edum(ih)/WTM(ii)/2.1
+                eft(i,j,ii,ih,1)=eft(i,j,ii,ih,1)+edum(ih)/WTM(ii)
 			  end do
 			  exit busca2
 			end if
@@ -206,6 +206,7 @@ subroutine lee
 		do 
 		 if(ii.eq.27) then
 		 read(11,*,END=300) idcf,rdum,levl,(edum(ih),ih=1,nh)
+         !print *,idcf,rdum,levl,(edum(ih),ih=1,nh)
 		 else
 		 read(11,*,END=300) idcf,levl,(edum(ih),ih=1,nh)
 		 end if

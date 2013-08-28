@@ -1,6 +1,6 @@
 !  movil_spatial.f90
 !
-!  ifort -O3 -axAVX movil_spatial.f90
+!  ifort -O3 -axAVX -o MSpatial.exe movil_spatial.f90
 !
 !  Creado por Jose Agustin Garcia Reynoso el 25/05/2012
 !
