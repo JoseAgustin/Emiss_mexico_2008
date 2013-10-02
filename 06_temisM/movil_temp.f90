@@ -142,7 +142,7 @@ subroutine lee
 	read (10,'(A)') cdum
 	do i=1,nm
 		read(10,*) idcel(i),(emiM(i,j,k),j=1,nscc(k)),mst(i)
-		!print *,i,idcel(i),(emiM(i,j,k),j=1,nscc(k))
+		print *,i,idcel(i),(emiM(i,j,k),j=1,nscc(k)),mst(i)
 	end do
 	close(10)
 	print *,"Done reading: ",efile(k)

@@ -157,6 +157,8 @@ subroutine lee
 	nl=i
 	do i=1,nl
 	read(10,*,ERR=140) id(i),iscc(i),pol(i),ei(i),im(i)
+!    print *,id(i),iscc(i),pol(i),ei(i),im(i)
+!   if(i.eq.4) stop
 	end do
 	print *,'End reading file M_E2008.csv'
 	close(10)

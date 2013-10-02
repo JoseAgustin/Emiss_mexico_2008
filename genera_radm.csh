@@ -17,9 +17,9 @@ echo $ProcessDir
 #  Build the fecha.txt file
 
 @ mes = 4
-@ dia = 9
+@ dia = 8
 
-while ( $dia <= 9 )
+while ( $dia <= 11)
 echo $dia
 cd $ProcessDir/04_temis
 
@@ -39,17 +39,18 @@ echo ' '
 echo '  Mes ='$mes 'DIA '$dia
 #
 cd ..
-echo 'Movil Temporal distribution'
-cd 06_temisM/
-./Mtemporal.exe > movil.log &
+
 echo 'Point Temporal distribution'
-cd ../07_puntual/
+cd ./07_puntual/
 ./Puntual.exe >& puntual.log &
 echo 'Area Temporal distribution'
 cd ../04_temis/
 ./Atemporal.exe  >& area.log
 cd ../05_semisM/
-./MSpatial.exe >& movil.log
+./MSpatial.exe >& movil.log &
+echo 'Movil Temporal distribution'
+cd ../06_temisM/
+./Mtemporal.exe > movil.log
 #
 #echo 'Biogenic'
 #cd ../12_biogenic
