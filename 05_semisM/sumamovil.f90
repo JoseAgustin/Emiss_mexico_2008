@@ -11,8 +11,8 @@
 	program sumamovil
 	integer nd,ne
 	parameter(ne=7)
-	character (len=10),dimension(nd) :: scc	
-	character (len= 7),dimension(nd) :: fips
+    character (len=10),allocatable :: scc(:)
+    character (len= 7),allocatable :: fips(:)
 	character (len= 4),dimension(ne) :: cemis
 	character (len=10) ::sccb
 	character (len= 5) ::fipsb
@@ -21,7 +21,8 @@
 	integer:: anio,est,cint
 	integer :: i,j
 	real,dimension(ne):: emisb
-	real,dimension(nd,ne):: emis
+    real,allocatable :: emis(:,:)
+    common /var1/ nd
 	data ofile /'M_orl2008.txt'/
 
 	data cemis/'PM10','PM25','NOx','SO2','CO','VOC','NH3'/
@@ -43,9 +44,11 @@
       i=1+i
     end do
     100 continue
-   print *,'number of lines',i
-   rewind(10)
-    nd=i 
+    print *,'number of lines',i
+    rewind(10)
+    read (10,*)cdum
+    nd=i
+    allocate (scc(nd),fips(nd),emis(nd,ne))
 	do i=1,nd
 	read (10,*)anio,est,st,fips(i),cdum,cdum,scc(i),cint,cint,(emis(i,j),j=1,ne)
 	print *,i,anio," ",est," ",st," ",fips(i)," ",scc(i)!," ",(emis(j),j=1,ne)
@@ -70,7 +73,7 @@
 			emisb(j)=emis(i,j)+emisb(j)
 	    end do
 	  else
-			emisb=emisb/0.90718474  !conversion a ton short
+			emisb=emisb/1.0 !conversion a ton short
 		    do j=1,ne
 			 if(emisb(j).ne.0) then
 			 select case (j)
