@@ -99,8 +99,8 @@ subroutine lee
     & 'RADM-2_XYL_P.txt','T_ANNPM10.csv','T_ANNPM25.csv', &
 	& 'GSO4_P.txt','PNO3_P.txt','OTHE_P.txt','POA_P.txt','PEC_P.txt'/
 ! Mole weight
-       DATA WTM /2.6, 17., 46., 640., 56., 16., 106., 30.,58.,44.,72.,&   !
-!             Cambio en emisiones COx10 y SO2/10
+       DATA WTM /2.6, 17., 46., 64., 56., 16., 106., 30.,58.,44.,72.,&   !
+!             Cambio en emisiones COx10 y SO2
 	   &        114., 30., 68., 72., 70., 72.,  70., 28.,56.,42.,46.,&
 	   &         60., 92.,106.,3600.,3600.,3600.,3600.,3600.,3600.,3600./ ! MW 3600 for unit conversion to ug/s
 

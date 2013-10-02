@@ -1,6 +1,6 @@
 #!/bin/csh
 #
-#  genera_fecha.csh
+#  genera_radm.csh
 #
 #
 #  Creado por Jose Agustin Garcia Reynoso el 26/07/12.
@@ -11,24 +11,24 @@
 #  Modificaciones:
 #         14/08/2013 Actualizacion para IE del 2008
 #
-set ProcessDir = /users/Datos/Documents/Proyectos/EMISIONES/mexico_2008
+set ProcessDir = $PWD
 echo $ProcessDir
 #
 #  Build the fecha.txt file
 
-@ mes = 3
-@ dia = 10
+@ mes = 4
+@ dia = 9
 
-while ( $dia <= 10 )
+while ( $dia <= 9 )
 echo $dia
-cd $PWD/04_temis
+cd $ProcessDir/04_temis
 
 echo $PWD
 #
 if ( -e fecha.txt ) then
 rm fecha.txt
 endif
-#ln -sf anio2008.csv anio2013.csv
+ln -sf anio2008.csv.org  anio2008.csv
 #
 cat << End_Of_File > fecha.txt
 $mes       ! month jan =1 to dec=12

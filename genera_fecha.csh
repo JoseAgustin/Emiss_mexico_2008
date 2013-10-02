@@ -13,9 +13,9 @@ set ProcessDir = $PWD
 #
 #  Build the fecha.txt file
 
-@ mes = 3
-@ dia = 7	
-while ($dia <= 13 )        
+@ mes = 4
+@ dia = 8	
+while ($dia <= 11 )        
 cd $ProcessDir
 
 #
