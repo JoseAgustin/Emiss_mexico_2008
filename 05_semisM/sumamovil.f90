@@ -10,7 +10,7 @@
 
 	program sumamovil
 	integer nd,ne
-	parameter(nd=298040,ne=7)
+	parameter(ne=7)
 	character (len=10),dimension(nd) :: scc	
 	character (len= 7),dimension(nd) :: fips
 	character (len= 4),dimension(ne) :: cemis
@@ -37,6 +37,15 @@
 	print *,"     Lee datos"
 	open (unit=10,file='F_moviles.csv',status='OLD',action='read')
 	read (10,*)cdum
+    i=0
+    do
+      read(10,*,END=100)cdum
+      i=1+i
+    end do
+    100 continue
+   print *,'number of lines',i
+   rewind(10)
+    nd=i 
 	do i=1,nd
 	read (10,*)anio,est,st,fips(i),cdum,cdum,scc(i),cint,cint,(emis(i,j),j=1,ne)
 	print *,i,anio," ",est," ",st," ",fips(i)," ",scc(i)!," ",(emis(j),j=1,ne)
