@@ -321,7 +321,9 @@ subroutine calculos
 !
 	print *,'Calculos'
 	do i=1,nl
+       print *,i
 		do k=1,nsp
+        print *,i,k
 			do l=1,nh
 	if(mcst(ict(i),jct(i)).eq.6 )emis(i,k,l)=e_mis(i,k)*mes(i)*hCST(i,l)
 	if(mcst(ict(i),jct(i)).eq.7 )emis(i,k,l)=e_mis(i,k)*mes(i)*hMST(i,l)
