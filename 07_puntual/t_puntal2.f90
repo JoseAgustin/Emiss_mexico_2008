@@ -71,9 +71,9 @@ implicit none
 	end if
 	close(10)
 	if(month.lt.10) then
-	write(current_date,'(A6,I1,A12)')'2005-0',month,'-01_00:00:00'
+	write(current_date,'(A6,I1,A12)')'2008-0',month,'-01_00:00:00'
 	else
-	write(current_date,'(A5,I2,A12)')'2005-0',month,'-01_00:00:00'	
+	write(current_date,'(A5,I2,A12)')'2008-0',month,'-01_00:00:00'	
 	end if
     if(idia.lt.10) then
         write(current_date(10:10),'(I1)') idia
@@ -82,10 +82,10 @@ implicit none
     end if
 	print *,'Done fecha.txt ',current_date
 !
-!   Days in 2005 year
+!   Days in 2008 year
 !
-    print *,"READING anio2005.csv file"
-    open (unit=10,file='anio2005.csv',status='OLD',action='read')
+    print *,"READING anio2008.csv file"
+    open (unit=10,file='anio2008.csv',status='OLD',action='read')
     daytype=0
     read(10,*)cdum
         do
@@ -321,9 +321,9 @@ subroutine calculos
 !
 	print *,'Calculos'
 	do i=1,nl
-       print *,i
+       !print *,i
 		do k=1,nsp
-        print *,i,k
+        !print *,i,k
 			do l=1,nh
 	if(mcst(ict(i),jct(i)).eq.6 )emis(i,k,l)=e_mis(i,k)*mes(i)*hCST(i,l)
 	if(mcst(ict(i),jct(i)).eq.7 )emis(i,k,l)=e_mis(i,k)*mes(i)*hMST(i,l)

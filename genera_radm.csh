@@ -1,5 +1,9 @@
 #!/bin/csh
 #
+#PBS -q fqa 
+#PBS -l nodes=1:ppn=8 
+#PBS -N emisiones
+
 #  genera_radm.csh
 #
 #
@@ -11,13 +15,14 @@
 #  Modificaciones:
 #         14/08/2013 Actualizacion para IE del 2008
 #
+cd $PBS_O_WORKDIR
 set ProcessDir = $PWD
 echo $ProcessDir
 #
 #  Build the fecha.txt file
 
 @ mes = 4
-@ dia = 8
+@ dia = 11
 
 while ( $dia <= 11)
 echo $dia
@@ -45,12 +50,12 @@ cd ./07_puntual/
 ./Puntual.exe >& puntual.log &
 echo 'Area Temporal distribution'
 cd ../04_temis/
-./Atemporal.exe  >& area.log
+./Atemporal.exe  >& area.log 
 cd ../05_semisM/
-./MSpatial.exe >& movil.log &
+./MSpatial.exe >& movil.log 
 echo 'Movil Temporal distribution'
 cd ../06_temisM/
-./Mtemporal.exe > movil.log
+./Mtemporal.exe > movil.log 
 #
 #echo 'Biogenic'
 #cd ../12_biogenic
@@ -77,7 +82,7 @@ echo 'Area '
 #
 echo ' Guarda'
 cd ../10_storage
-./radm2.exe  > radm2_bio.log &
+./radm2.exe  > radm2_bio.log 
 #./saprc99bio.exe > saprc_bio.log
 @ dia++
 end 
