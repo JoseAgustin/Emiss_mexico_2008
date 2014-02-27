@@ -177,7 +177,7 @@ implicit none
 		end do
 	close(20)
 	end do
-
+    print *,"*****  DONE PM2.5 POINT SPECIATION  *****"
 end subroutine guarda
 subroutine count
 	integer i,j,nn

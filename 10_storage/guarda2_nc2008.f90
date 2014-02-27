@@ -16,6 +16,7 @@
 !
 !   Actualizacion de xlat, xlon         26/08/2012
 !   Conversion de unidades en aerosoles 04/10/2012
+!   Inclusion de NO2 en las emisiones   19/02/2014
 !   Para año 2008
 module vars
 	integer :: nf    ! number of files antropogenic
@@ -32,17 +33,17 @@ module vars
 	real,allocatable :: lon(:),lat(:)
 	real,allocatable ::xlon(:,:),xlat(:,:)
 
-	parameter(nf=32,radm=37,nh=24)
+	parameter(nf=33,radm=38,nh=24)
 	
     character(len=3) :: cday
     character(len=11),dimension(radm):: ename=(/'E_CO   ','E_NH3  ','E_NO   ', &
-	'E_SO2  ','E_ALD  ','E_CH4  ','E_CSL  ','E_ETH  ','E_GLY ', &
+	'E_NO2  ','E_SO2  ','E_ALD  ','E_CH4  ','E_CSL  ','E_ETH  ','E_GLY ', &
 	'E_HC3  ','E_HC5  ','E_HC8  ','E_HCHO ','E_ISO  ','E_KET  ','E_MACR ', &
 	'E_MGLY ','E_MVK  ','E_OL2  ','E_OLI  ','E_OLT  ','E_ORA1 ','E_ORA2 ', &
 	'E_TOL  ','E_XYL  ','E_PM_10','E_PM25 ','E_SO4I ','E_NO3I ','E_PM25I',&
 	'E_ORGI ','E_ECI  ','E_SO4J ','E_NO3J ','E_PM25J','E_ORGJ ','E_ECJ  '/)
     character(len= 16),dimension(radm):: cname=(/'Carbon Monoxide','NH3  ','NO   ', &
-	'SO2  ','ALDEHYDES  ','METHANE','CRESOL','Ethane','Glyoxal', &
+	'NO2  ','SO2  ','ALDEHYDES  ','METHANE','CRESOL','Ethane','Glyoxal', &
 	'HC3  ','HC5  ','HC8  ','HCHO ','ISOPRENE','Acetone','Acrolein', &
 	'MGLY ','Methyl Vinil Ketone  ','Alkenes','alkenes   ','Terminal Alkynes','Formic Acid','Acetic Acid ', &
 	'TOLUENE  ','XYLENE  ','PM_10','PM_25 ','Sulfates ','Nitrates ','PM25I',&
@@ -74,23 +75,23 @@ subroutine lee
 	character(len=46) :: description
 	character(len=13) cdum
 	character(len=17),dimension(nf):: fnameA,fnameM,fnameP
-	data fnameA /'TACO__2008.txt','TANH3_2008.txt','TANOx_2008.txt','TASO2_2008.txt',&
+	data fnameA /'TACO__2008.csv','TANH3_2008.csv','TANOx_2008.csv','TANOx_2008.csv','TASO2_2008.csv',&
 	& 'RADM-2_ALD_A.txt','RADM-2_CH4_A.txt','RADM-2_CSL_A.txt','RADM-2_ETH_A.txt',&
 	& 'RADM-2_GLY_A.txt','RADM-2_HC3_A.txt','RADM-2_HC5_A.txt','RADM-2_HC8_A.txt',&
 	& 'RADM-2_HCHO_A.txt','RADM-2_ISO_A.txt','RADM-2_KET_A.txt','RADM-2_MACR_A.txt',&
 	& 'RADM-2_MGLY_A.txt','RADM-2_MVK_A.txt','RADM-2_OL2_A.txt','RADM-2_OLI_A.txt',&
 	& 'RADM-2_OLT_A.txt','RADM-2_ORA1_A.txt','RADM-2_ORA2_A.txt','RADM-2_TOL_A.txt',&
-	& 'RADM-2_XYL_A.txt','TAPM102008.txt','TAPM2_2008.txt', &
+	& 'RADM-2_XYL_A.txt','TAPM102008.csv','TAPM2_2008.csv', &
 	& 'GSO4_A.txt','PNO3_A.txt','OTHE_M.txt','POA_A.txt','PEC_A.txt'/
-	data fnameM /'TMCO__2008.txt','TMNH3_2008.txt','TMNOx_2008.txt','TMSO2_2008.txt',&
+	data fnameM /'TMCO__2008.csv','TMNH3_2008.csv','TMNOx_2008.csv','TMNOx_2008.csv','TMSO2_2008.csv',&
 	& 'RADM-2_ALD_M.txt','RADM-2_CH4_M.txt','RADM-2_CSL_M.txt','RADM-2_ETH_M.txt',&
 	& 'RADM-2_GLY_M.txt','RADM-2_HC3_M.txt','RADM-2_HC5_M.txt','RADM-2_HC8_M.txt',&
 	& 'RADM-2_HCHO_M.txt','RADM-2_ISO_M.txt','RADM-2_KET_M.txt','RADM-2_MACR_M.txt',&
 	& 'RADM-2_MGLY_M.txt','RADM-2_MVK_M.txt','RADM-2_OL2_M.txt','RADM-2_OLI_M.txt',&
 	& 'RADM-2_OLT_M.txt','RADM-2_ORA1_M.txt','RADM-2_ORA2_M.txt','RADM-2_TOL_M.txt',&
-	& 'RADM-2_XYL_M.txt','TMPM102008.txt','TMPM2_2008.txt', &
+	& 'RADM-2_XYL_M.txt','TMPM102008.csv','TMPM2_2008.csv', &
 	& 'GSO4_M.txt','PNO3_M.txt','OTHE_M.txt','POA_M.txt','PEC_M.txt'/
-    data fnameP /'T_ANNCO.csv','T_ANNNOX.csv','T_ANNNOX.csv','T_ANNSO2.csv',&
+    data fnameP /'T_ANNCO.csv','T_ANNNH3.csv','T_ANNNOX.csv','T_ANNNOX.csv','T_ANNSO2.csv',&
     & 'RADM-2_ALD_P.txt','RADM-2_CH4_P.txt','RADM-2_CSL_P.txt','RADM-2_ETH_P.txt',&
     & 'RADM-2_GLY_P.txt','RADM-2_HC3_P.txt','RADM-2_HC5_P.txt','RADM-2_HC8_P.txt',&
     & 'RADM-2_HCHO_P.txt','RADM-2_ISO_P.txt','RADM-2_KET_P.txt','RADM-2_MACR_P.txt',&
@@ -99,8 +100,8 @@ subroutine lee
     & 'RADM-2_XYL_P.txt','T_ANNPM10.csv','T_ANNPM25.csv', &
 	& 'GSO4_P.txt','PNO3_P.txt','OTHE_P.txt','POA_P.txt','PEC_P.txt'/
 ! Mole weight
-       DATA WTM /2.6, 17., 46., 64., 56., 16., 106., 30.,58.,44.,72.,&   !
-!             Cambio en emisiones COx10 y SO2
+       DATA WTM /26, 17., 32.25, 657.1, 64., 56., 16., 106., 30.,58.,44.,72.,&   !
+!             Cambio en emisiones  NO 30/.93=32.25 NO2= 46/0.07=657.1
 	   &        114., 30., 68., 72., 70., 72.,  70., 28.,56.,42.,46.,&
 	   &         60., 92.,106.,3600.,3600.,3600.,3600.,3600.,3600.,3600./ ! MW 3600 for unit conversion to ug/s
 
@@ -143,7 +144,7 @@ subroutine lee
         end if
         print *,ii,' ',fnameA(ii),' ',current_date
 		do 
-		 if(ii.eq.27) then
+		 if(ii.eq.28) then
 		 read(11,*,END=100) idcf,rdum,(edum(ih),ih=1,nh)
 		 else
 		 read(11,*,END=100) idcf,(edum(ih),ih=1,nh)
@@ -172,7 +173,7 @@ subroutine lee
         end if
         print *,ii,' ',fnameM(ii),' ',current_date
 		do 
-		 if(ii.eq.27) then
+		 if(ii.eq.28) then
 		 read(11,*,END=200) idcf,rdum,(edum(ih),ih=1,nh)
 		 else
 		 read(11,*,END=200) idcf,(edum(ih),ih=1,nh)
@@ -193,7 +194,7 @@ subroutine lee
 		end do	
  200 close(11)
 !  For point sources
-	if (ii.ne.2) then
+!	if (ii.ne.2) then
 		open(11,file=fnameP(ii),status='OLD',action='READ')
 		read(11,*)cdum
 		if (ii.eq.1)then
@@ -204,7 +205,7 @@ subroutine lee
         end if
         print *,ii,' ',fnameP(ii),' ',current_date
 		do 
-		 if(ii.eq.27) then
+		 if(ii.eq.28) then   !for PM2.5 
 		 read(11,*,END=300) idcf,rdum,levl,(edum(ih),ih=1,nh)
          !print *,idcf,rdum,levl,(edum(ih),ih=1,nh)
 		 else
@@ -226,7 +227,7 @@ subroutine lee
 		end do busca3
 		end do
  300 close(11)
-	end if
+!	end if
 	end do! ii nf
 	
 	return
@@ -253,6 +254,7 @@ subroutine store
 	integer :: isp(radm)
 	integer,dimension(NDIMS):: dim,id_dim
     real,ALLOCATABLE :: ea(:,:,:,:)
+    real :: CDIM=9.0  ! celdimension in km
 	character (len=19),dimension(NDIMS) ::sdim
 	character(len=39):: FILE_NAME
 	character(len=19),dimension(1,1)::Times
@@ -263,7 +265,7 @@ subroutine store
   	   DATA isp / 1, 2, 3, 4, 5, 6, 7, 8, 9,10, &
                  11,12,13,14,15, 16,17,18,19,20, &
                  21,22,23,24,25, 26,27,28,29,30, &
-				 31,32,33,34,35, 36,37/
+				 31,32,33,34,35, 36,37,38/
 
     data sdim /"Time               ","DateStrLen         ","west_east          ",&
 	&          "south_north        ","bottom_top         ","emissions_zdim_stag"/	
@@ -313,8 +315,8 @@ subroutine store
 	call check( nf90_put_att(ncid, NF90_GLOBAL, "WEST-EAST_GRID_DIMENSION",nx))
 	call check( nf90_put_att(ncid, NF90_GLOBAL, "SOUTH-NORTH_GRID_DIMENSION",ny))
 	call check( nf90_put_att(ncid, NF90_GLOBAL, "BOTTOM-TOP_GRID_DIMENSION",1))
-	call check( nf90_put_att(ncid, NF90_GLOBAL, "DX",9000.))
-	call check( nf90_put_att(ncid, NF90_GLOBAL, "DY",9000.))
+	call check( nf90_put_att(ncid, NF90_GLOBAL, "DX",CDIM*1000))
+	call check( nf90_put_att(ncid, NF90_GLOBAL, "DY",CDIM*1000))
 	call check( nf90_put_att(ncid, NF90_GLOBAL, "CEN_LAT",(MAXVAL(lat)+MINVAL(lat))/2))
 	call check( nf90_put_att(ncid, NF90_GLOBAL, "CEN_LON",(MAXVAL(lon)+MINVAL(lon))/2))
 	call check( nf90_put_att(ncid, NF90_GLOBAL, "TRUELAT1",17.5))
@@ -364,7 +366,7 @@ subroutine store
 !    Inicia loop de tiempo
 tiempo: do it=iit,eit
 		write(6,'(A,x,I3)')'TIEMPO: ', it
-        gases: do ikk=1,27
+        gases: do ikk=1,28
 			ea=0.0
 		if(ikk.eq.1) then
 		      if (it.lt.10) then
@@ -389,7 +391,7 @@ tiempo: do it=iit,eit
             do i=1, nx
                 do j=1, ny
 				  do l=1,zlev
-                   ea(i,j,l,1)=eft(i,j,ikk,it+1,l)
+                   ea(i,j,l,1)=eft(i,j,ikk,it+1,l)!/(CDIM*CDIM) !
 				  end do
                 end do
             end do
@@ -404,7 +406,7 @@ tiempo: do it=iit,eit
             do i=1, nx
                 do j=1, ny
 				  do l=1,zlev
-					ea(i,j,l,1)=eft(i,j,ikk,it+1,l)
+					ea(i,j,l,1)=eft(i,j,ikk,it+1,l)!/(CDIM*CDIM) ! entre 3x3 km
 				  end do
                 end do
             end do

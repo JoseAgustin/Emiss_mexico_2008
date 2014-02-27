@@ -38,17 +38,18 @@ subroutine imprime
     integer i,j,k
 	character(len=15) ::name
 	do i=1,7
-	name='M_'//trim(pol(i))//'.txt'
+	name='M_'//trim(pol(i))//'.csv'
 	open(10,file=name)
-	write(10,*)'GRIDCODE emissions in Mg per year'
+	write(10,*)'GRIDCODE emissions in kg per year'
 	write(10,210)size(jscc),(jscc(j),j=1,size(jscc))
 	do k=1,size(grid2)
 	  write(10,220) grid2(k),(1000*pemi(k,i,j),j=1,size(jscc)),im2(k)
 	end do
 	close(10)
 	end do
-210 format(i6,x,<size(jscc)>(I11,x))
-220 format(i6,x,<size(jscc)>ES12.4,x,I2)
+    print *,"+++++   DONE SPATIAL MOVIL +++++"
+210 format(i6,",",<size(jscc)>(I11,","))
+220 format(i6,",",<size(jscc)>(ES12.4,","),I2)
 end subroutine imprime
 !
 subroutine computations
@@ -157,7 +158,9 @@ subroutine lee
 	nl=i
 	do i=1,nl
 	read(10,*,ERR=140) id(i),iscc(i),pol(i),ei(i),im(i)
-        if(id(i)/1000.eq.17) ei(i)=ei(i)*3.4
+    if(id(i)/1000.eq.13)ei(i)=ei(i)*3.4 !hidalgo
+    if(id(i)/1000.eq.17)ei(i)=ei(i)*3.4 !morelos
+    if(id(i)/1000.eq.29)ei(i)=ei(i)*3.4 !tlaxcala
 !    print *,id(i),iscc(i),pol(i),ei(i),im(i)
 !   if(i.eq.4) stop
 	end do

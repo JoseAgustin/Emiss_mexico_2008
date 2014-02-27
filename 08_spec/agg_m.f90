@@ -48,13 +48,15 @@ subroutine lee
 	implicit none
 	integer :: i,j,id,idum,l
 	integer*8::isccf
-	real,dimension(30)::fagg ! aggregation factor for 30 species
+	real,dimension(39)::fagg ! aggregation factor for 30 species
 	character(len=10)::cdum
 	logical :: lfil
-	print *,"TMCOV_2008.txt"
-	open (unit=10,file='TMCOV_2008.txt',status='old',action='read')
+	print *,"TMCOV_2008.csv"
+	open (unit=10,file='TMCOV_2008.csv',status='old',action='read')
 	read(10,*) cdum  ! header
+	print *, cdum
 	read(10,*) lfa,current_date  ! header
+	print *,lfa,current_date
 	i=0
 	do 
 	read(10,*,end=100) cdum 
@@ -90,7 +92,7 @@ subroutine lee
 	read(16,*)cdum,cprof
 	read(16,*) nclass
 	print *,'Speciation for Mechanism: ',trim(cprof)
-	if(nclass.gt.34) stop "Change size in fagg dimension"
+	if(nclass.gt.39) stop "Change size in fagg dimension"
 	rewind(16)
 	allocate(cname(nclass))
 	read(16,*)cdum
@@ -222,9 +224,10 @@ subroutine guarda
 	write(20,'(4A)')cname(j),',',trim(cprof),', Emissions'
 	write(20,*) size(emis,dim=1),current_date
 		do k=1,size(emis,dim=1)
-			write(20,'(I7,x,<nh>(ES12.5,x))')grid2(k),(emis(k,j,i),i=1,size(emis,dim=3))
+			write(20,'(I7,",",24(ES12.5,","))')grid2(k),(emis(k,j,i),i=1,size(emis,dim=3))
 		end do
 	close(20)
 	end do
+    print *,"*****  DONE MOVIL SPECIATION *****"
 end subroutine guarda
 end program agg_m

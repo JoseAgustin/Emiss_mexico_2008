@@ -15,19 +15,20 @@
 module vars
 integer :: nsp,nh    !number of compounds & hours
 integer ::juliano
-parameter (nsp=6, nh=24,juliano=366)
+parameter (nsp=7, nh=24,juliano=366)
 integer :: month,daytype
 integer*8,allocatable:: iscc(:)
 integer,allocatable :: capa(:),ict(:),jct(:),idcg(:,:)
 integer,allocatable :: profile(:,:),mcst(:,:)
 integer :: nl,nx,ny
+real :: fweek
 real,allocatable :: lat(:),lon(:),pf(:,:)
 real,allocatable :: e_mis(:,:),emis(:,:,:)! line compounds nsp
 real,allocatable :: mes(:),dia(:),diap(:),hCST(:,:),hMST(:,:),hPST(:,:)
 character (len=7) :: cvar(nsp)
 character (len=19) :: current_date
 
-common /dat/ nl,nx,ny,month,daytype,cvar,current_date
+common /dat/ nl,nx,ny,month,daytype,fweek,cvar,current_date
 end module vars
 !
 program t_puntual
@@ -81,6 +82,7 @@ implicit none
         write(current_date( 9:10),'(I2)') idia
     end if
 	print *,'Done fecha.txt ',current_date
+      fweek=7.0/daym(month)! weeks per month
 !
 !   Days in 2008 year
 !
@@ -115,7 +117,7 @@ implicit none
 	allocate(emis(i,nsp,nh))
 	allocate(profile(3,nl))
 	allocate(ict(nl),jct(nl))
-
+    e_mis=0
 	do i=1,nl  ! Defaul values for temproal profile
 		profile(1,i)=262
 		profile(2,i)=7
@@ -127,8 +129,8 @@ implicit none
 	 read(10,*,err=110)lat(i),lon(i),iscc(i),(e_mis(i,j),j=1,nsp),capa(i)
 	end do
 	close(10)
-    e_mis=e_mis*1000 !para g desde TON
-		print *,'Done puntual.csv ',cvar,maxval(e_mis)
+        e_mis=e_mis*1000 !para kg desde TON
+        print *,'Done puntual.csv ',cvar,maxval(e_mis)
 !
 !	temporal_01.txt
 !
@@ -148,7 +150,6 @@ implicit none
     print *,'   >>>>>  Finding i,j for each cell localization'
      call localization(xlat,xlon,nx,ny,lat,lon,ict,jct,nl)   ! Point Sources
     print *,'   >>>>>  Finding emissions in grid'
-
 
 !  REading and findig monthly, week and houry code profiles
     inquire(15,opened=fil1)
@@ -189,7 +190,6 @@ implicit none
 	      end if
 		end do !i
 	 end do
-	 mes=mes/daym(month)! days per month
  210 continue
     ! print '(A3,<nl>(f6.3))','mon',(mes(i),i=1,nl)
 	 print *,'   Done Temporal_mon'
@@ -303,7 +303,7 @@ implicit none
 !
 end if
 
-    print *,'   Done ',nfile,daytype
+    print *,'   Done ',nfile,daytype,fweek
 
 	close(15)
 	close(16)
@@ -314,26 +314,27 @@ end if
 
 	return
 110	print *,'Error en ',i
+    STOP
 end subroutine lee
+
 subroutine calculos
 	implicit none
-	integer i,j,k,l,ival,ii
+	integer i,j,kk,l,ival,ii
 !
 	print *,'Calculos'
+    mes=mes*fweek
       do i=1,nl
-	!print *,'i=',i,nsp,nh
-       do k=1,nsp
-	!print *,'k=',k
+	if(ict(i).ne.0 .or.jct(i).ne.0) then
+       do kk=1,nsp
+	!print *,'k=',kk
 	do l=1,nh
-	if(mcst(ict(i),jct(i)).eq.6 )emis(i,k,l)=e_mis(i,k)*mes(i)*hCST(i,l)
-	if(mcst(ict(i),jct(i)).eq.7 )emis(i,k,l)=e_mis(i,k)*mes(i)*hMST(i,l)
-	if(mcst(ict(i),jct(i)).eq.8 )emis(i,k,l)=e_mis(i,k)*mes(i)*hPST(i,l)
+	if(mcst(ict(i),jct(i)).eq.6 )emis(i,kk,l)=e_mis(i,kk)*mes(i)*hCST(i,l) ! Mg to kg
+	if(mcst(ict(i),jct(i)).eq.7 )emis(i,kk,l)=e_mis(i,kk)*mes(i)*hMST(i,l)
+	if(mcst(ict(i),jct(i)).eq.8 )emis(i,kk,l)=e_mis(i,kk)*mes(i)*hPST(i,l)
 	end do
 	end do
+    end if 
 	end do
-      print *,'loop 1'
-	
-
 end subroutine calculos
 subroutine guarda
 	implicit none
@@ -363,10 +364,11 @@ subroutine guarda
 			end do
 		close(unit=10)
 	end do
-210 format(I8,',',I3,',',<nh-1>(ES,","),ES)
-220 format(f10.6,',',f10.4,',',I3,',',<nh-1>(ES,","),ES)
-300 format(I10,',',f10.6,',',f10.4,',',I3,',',<nh-1>(ES,","),ES)
-310 format(I10,',',I8,',',I3,',',<nh-1>(ES,","),ES)
+     print *,"****** DONE PUNTUAL *****"
+210 format(I8,',',I3,',',23(ES,","),ES)
+220 format(f10.6,',',f10.4,',',I3,',',23(ES,","),ES)
+300 format(I10,',',f10.6,',',f10.4,',',I3,',',23(ES,","),ES)
+310 format(I10,',',I8,',',I3,',',23(ES,","),ES)
 end subroutine guarda
 !
    Subroutine localization(xlat,xlon,mi,mj,clat,clon,ist,jst,nst)

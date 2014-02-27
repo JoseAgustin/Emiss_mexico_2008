@@ -26,6 +26,7 @@ integer*8,dimension(nnscc) ::iscc
 integer, allocatable :: idcel(:),idcel2(:)
 integer, allocatable :: idsm(:),idsmh(:) ! state municipality IDs emiss and usoH
 integer, allocatable :: mst(:)  ! Difference in number of hours (CST, PST, MST)
+real ::fweek
 real,allocatable ::emiA(:,:,:) !Area emisions from files cel,ssc,file
 real,allocatable :: emis(:,:,:) ! Emission by cel,file and hour (inorganic)
 real,allocatable :: epm2(:,:,:) ! PM25 emissions cel,scc and hour
@@ -41,11 +42,11 @@ character(len=14),dimension(nf) ::efile,casn
  data efile/'ASO2_2008.csv','ANOx_2008.csv','ANH3_2008.csv',&
 &           'ACO__2008.csv','APM10_2008.csv','APM25_2008.csv',&
 &           'AVOC_2008.csv'/
- data casn /'TASO2_2008.txt','TANOx_2008.txt','TANH3_2008.txt',&
-&           'TACO__2008.txt','TAPM102008.txt','TAPM2_2008.txt',&
-&           'TAVOC_2008.txt'/
+ data casn /'TASO2_2008.csv','TANOx_2008.csv','TANH3_2008.csv',&
+&           'TACO__2008.csv','TAPM102008.csv','TAPM2_2008.csv',&
+&           'TAVOC_2008.csv'/
 
-common /vars/ nscc,lh,month,daytype,mes,dia,hora,current_date
+common /vars/ fweek,nscc,lh,month,daytype,mes,dia,hora,current_date
 end module
 !
 !  Progran  atemporal.f90
@@ -104,7 +105,8 @@ subroutine lee
         else 
         write(current_date( 9:10),'(I2)') idia
     end if
-    print *,'Done fecha.txt : ',current_date,month,idia
+    fweek= 7./daym(month)
+    print *,'Done fecha.txt : ',current_date,month,idia,fweek
 !
     print *,"READING uso_horario.csv file"
     open (unit=10,file='uso_horario.csv',status='OLD',action='read')
@@ -209,11 +211,12 @@ subroutine lee
 	      end if
 		end do !i
 	 end do
-	 mes=mes/daym(month)! days per month
  210 continue
+    !print *,'   Mes antes ',maxval(mes)
+     ! weeks per month
 	! print '(A3,<nscc(k)>(f6.3))','mon',(mes(i,k),i=1,nscc(k))
-	 print *,'   Done Temporal_mon'
-!  REading and findig weekely  profile
+	 print *,'   Done Temporal_mon'!,maxval(mes)
+!  Reading and findig weekely  profile
     inquire(17,opened=fil1)
     if(.not.fil1) then
 	  open(unit=17,file='temporal_week.txt',status='OLD',action='read')
@@ -237,7 +240,7 @@ subroutine lee
  220 continue
      !print '(A5,<nscc(k)>(f6.3))','day  ',(dia(i,k),i=1,nscc(k))
      !print '(A5,<nscc(k)>(f6.3))','day p',(diap(i,k),i=1,nscc(k))
-	 print *,'   Done Temporal_week'
+	 print *,'   Done Temporal_week',maxval(diap)
      nfile='temporal_wkday.txt'
 	 nfilep='temporal_wkend.txt'
 !  Reading and findig houlry  profile
@@ -321,7 +324,7 @@ subroutine lee
      !do l=1,nh
      ! print '(A3,x,I2,x,<nscc(k)>(f6.3))','hr',l,(hCST(i,k,l),i=1,nscc(k))
 	 !end do
-	 print *,'   Done ',nfile,daytype
+	 print *,'   Done ',nfile,daytype,maxval(hCST)
 	end do ! K
 	close(15)
 	close(16)
@@ -339,7 +342,9 @@ subroutine compute
 !
 ! For inorganics
 !	
-	do k=1,nf-2
+    emis=0
+    mes=mes*fweek! weeks per month
+    do k=1,nf-2
 	  ival=idcel(1)
 	  ii=1
 	  do i=1,nm
@@ -370,6 +375,7 @@ subroutine compute
 !
 !  For PM2.5
 !  
+    epm2=0
 	k=nf-1
    ii=1
    ival=idcel(1)
@@ -399,6 +405,7 @@ subroutine compute
 !	
 !  For VOCs
 !  
+    evoc=0
 	k=nf
    ii=1
    ival=idcel(1)
@@ -442,7 +449,7 @@ subroutine storage
    end do
    close(unit=10)
   end do
-100 format(I7,x,<nh>ES12.3)
+100 format(I7,",",23(ES12.3,","),ES12.3)
    k=nf-1
 ! WARNING iscc and pm25 must be the before last one to be read.
    open(unit=10,file=casn(k),action='write')
@@ -465,7 +472,8 @@ subroutine storage
      end do
    end do
 	close(10)
-110 format(I7,x,I10,x,<nh>ES12.3)
+    print *,"*****  DONE Temporal Area *****"
+110 format(I7,",",I10,",",23(ES12.3,","),ES12.3)
 end subroutine storage
 subroutine count
   integer i,j

@@ -23,6 +23,7 @@ integer,dimension(nf) :: nscc ! number of scc codes per file
 integer*8,dimension(nnscc) ::iscc 
 integer, allocatable :: idcel(:),idcel2(:)
 integer, allocatable :: mst(:)  ! Difference in number of hours (CST, PST, MST)
+real :: fweek
 real,allocatable ::emiM(:,:,:) !Mobile emisions from files cel,ssc,file
 real,allocatable :: emis(:,:,:) ! Emission by cel,file and hour (inorganic)
 real,allocatable :: evoc(:,:,:) ! VOC emissions cel,scc and hour
@@ -34,13 +35,13 @@ character (len=19) :: current_date
 
 character(len=14),dimension(nf) ::efile,casn
 
- data efile /'M_CO.txt','M_NH3.txt','M_NOx.txt','M_SO2.txt', &
-&           'M_PM10.txt','M_PM25.txt','M_VOC.txt'/
- data casn /'TMSO2_2008.txt','TMNOx_2008.txt','TMNH3_2008.txt',&
-&           'TMCO__2008.txt','TMPM102008.txt','TMPM2_2008.txt',&
-&           'TMCOV_2008.txt'/
+ data efile /'M_CO.csv','M_NH3.csv','M_NOx.csv','M_SO2.csv', &
+&           'M_PM10.csv','M_PM25.csv','M_VOC.csv'/
+ data casn /'TMSO2_2008.csv','TMNOx_2008.csv','TMNH3_2008.csv',&
+&           'TMCO__2008.csv','TMPM102008.csv','TMPM2_2008.csv',&
+&           'TMCOV_2008.csv'/
 
-common /vars/ nscc,nm,month,daytype,mes,dia,hora,current_date
+common /vars/ fweek,nscc,nm,month,daytype,mes,dia,hora,current_date
 end module
 !
 !  Progran  atemporal.f90
@@ -100,7 +101,9 @@ subroutine lee
         else 
         write(current_date( 9:10),'(I2)') idia
     end if
-    print *,'Done fecha.txt : ',current_date,month,idia
+    fweek=7./daym(month)
+    print *,'Done fecha.txt : ',current_date,month,idia,fweek
+
 !
 !   Days in 2008 year
 !
@@ -142,7 +145,7 @@ subroutine lee
 	read (10,'(A)') cdum
 	do i=1,nm
 		read(10,*) idcel(i),(emiM(i,j,k),j=1,nscc(k)),mst(i)
-		print *,i,idcel(i),(emiM(i,j,k),j=1,nscc(k)),mst(i)
+		!print *,i,idcel(i),(emiM(i,j,k),j=1,nscc(k)),mst(i)
 	end do
 	close(10)
 	print *,"Done reading: ",efile(k)
@@ -185,7 +188,6 @@ subroutine lee
 	      end if
 		end do !i
 	 end do
-	 mes=mes/daym(month)! days per month
  210 continue
     ! print '(A3,<nscc(k)>(f6.3))','mon',(mes(i,k),i=1,nscc(k))
 	 print *,'   Done Temporal_mon'
@@ -317,6 +319,8 @@ subroutine compute
 !
 ! For inorganics
 !
+     mes=mes*fweek! weeks per month
+
 	do k=1,nf-2
 	  do i=1,nm
 		  do l=1,nh
@@ -368,7 +372,7 @@ subroutine storage
    end do
    close(unit=10)
   end do
-100 format(I7,x,<nh>ES12.4)
+100 format(I7,",",23(ES12.4,","),ES12.4)
    k=nf-1
 ! WARNING iscc voc must be the last one to be read.
    open(unit=10,file=casn(k),action='write')
@@ -391,7 +395,8 @@ subroutine storage
      end do
    end do
 	close(10)
-110 format(I7,x,I10,x,<nh>ES12.4)
+    print*,"*****  DONE MOVILE TEMPORAL *****"
+110 format(I7,",",I10,",",23(ES12.4,","),ES12.4)
 end subroutine storage
 subroutine count
   integer i,j

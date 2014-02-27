@@ -58,7 +58,7 @@ subroutine lee
 	character(len=10) ::cdum
 	character(len=25):: fname
 	logical ::lfil
-	fname='TMPM2_2008.txt'
+	fname='TMPM2_2008.csv'
 	print *, 'Reading : ',trim(fname)
 	open (unit=10,file=fname,status='old',action='read')
 	read(10,*) cdum  ! header
@@ -92,7 +92,7 @@ subroutine lee
 	end do
 200 continue
 	do i=1,60
-	 if(profile(i).eq.0) print *,iscc(i),' ',i
+	 if(profile(i).eq.0) print *,"profile=0",iscc(i),' ',i
 	end do
 	close(15)
 	!print '(15I5)',(profile(i),i=1,lfa)
@@ -173,7 +173,7 @@ implicit none
 		end do
 	close(20)
 	end do
-
+    print *,"***** DONE PM25 MOVIL SPECIATION *****"
 end subroutine guarda
 subroutine count
 	integer i,j,nn

@@ -29,8 +29,7 @@ module land
     data efile /'INH3_2008.csv','INOx_2008.csv','ISO2_2008.csv',&
 &           'IVOC_2008.csv','ICO__2008.csv','IPM10_2008.csv',&
 &           'IPM25_2008.csv'/
-!            NH3          NO2         SO2        CO
-!   data casn /'8013-59-0','10102-44-0','7446-09-5','82063-46-5',&
+!            NH3          NO2         SO2    VOC    CO PM10 PM25
     data ofile /'ANH3_2008.csv','ANOx_2008.csv','ASO2_2008.csv',&
 &           'AVOC_2008.csv','ACO__2008.csv','APM10_2008.csv',&
 &           'APM25_2008.csv'/
@@ -97,6 +96,7 @@ implicit none
         nl=nl+1
     end do
 120 print *,'numero de lineas',nl
+!    Population fraction fp1 furb, fp2 frural, fp3 fpob
     allocate(grip(nl),idp(nl),fp1(nl),fp2(nl),fp3(nl))
     rewind(10)
     read (10,*) cdum
@@ -116,11 +116,14 @@ implicit none
         print *,k,nscc(k)
         do i=1,nm
           read(10,*) edo,mun,iem(k,i),(emiss(i,j,k),j=1,nscc(k))
-          if(k.eq.5) print *,i,iem(k,i)
-          !if(i.eq.101)print  *,i,iem(k,i),(emiss(i,j,k),j=1,nscc(k))
-        end do
+          if(edo.eq.17 .or.edo .eq.13 .or.edo.eq.29)then!morelos hidalgo tlax
+              do j=1,nscc(k)
+              emiss(i,j,k)= 3* emiss(i,j,k)
+              end do ! j
+          end if
+        end do ! i
         close(10)
-    end do
+    end do! k
 end subroutine lee
 subroutine calculos
     implicit none
@@ -138,8 +141,11 @@ subroutine calculos
     inven: do i=1,nm          ! municipality
         if(ida(j).eq.iem(k,i)) then
            do l=1,nscc(k)     ! SCC
-             if(scc(k,l).eq.'2801500002') then
-                eagr(j,k,l)=emiss(i,l,k)*fa(j)*1000
+             if(scc(k,l).eq.'2801500002'.or.scc(k,l).eq.'2801000002'.or.&
+                scc(k,l).eq.'2801000000'.or.scc(k,l).eq.'2267000000'.or.&
+                scc(k,l).eq.'2801700000'.or.scc(k,l).eq.'2805000000'.or.&
+                scc(k,l).eq.'2270005000') then
+                eagr(j,k,l)=emiss(i,l,k)*fa(j)*1000  ! conversion de Mg to Kg
              end if
              if(scc(k,l).eq.'2199007000')eagr(j,k,l)=emiss(i,l,k)*fa(j)*1000*0.8
            end do

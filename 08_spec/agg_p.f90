@@ -52,7 +52,7 @@ subroutine lee
 	implicit none
 	integer :: i,j,l,id,idum
 	integer*8::isccf
-	real,dimension(34)::fagg ! aggregation factor for 30 species
+	real,dimension(39)::fagg ! aggregation factor for 30 species
 	character(len=10) :: cdum
 	open (unit=10,file='T_ANNVOC.csv',status='old',action='read')
 	lfa=0
@@ -73,6 +73,7 @@ subroutine lee
 	read (10,*) cdum  ! header 2
 	do i=1,lfa
 		read (10,*)iscc(i),grid(i),capa(i),(ea(i,j),j=1,nh)
+        !print *, i,iscc(i)
 	end do
 	close(10)
 ! READING  and findign profiles
@@ -94,7 +95,7 @@ subroutine lee
 	read(16,*)cdum,cprof
 	read(16,*) nclass
 	print *,'Speciation for Mechanism: ',trim(cprof)
-	if(nclass.gt.34) stop "Change size in fagg dimension"
+	if(nclass.gt.39) stop "Change size in fagg dimension"
 	rewind(16)
 	allocate(cname(nclass))
 	read(16,*)cdum
@@ -177,11 +178,11 @@ subroutine guarda
 	write(20,'(4A)')cname(j),',',trim(cprof),', Emissions'
 	write(20,*) size(emis,dim=1),',',current_date,',',cday
 		do k=1,size(emis,dim=1)
-			write(20,'(I8,x,I3,x,24(ES12.5,x))')grid2(k),layer(k),(emis(k,j,i),i=1,size(emis,dim=3))
+			write(20,'(I8,",",I3,",",24(ES12.5,","))')grid2(k),layer(k),(emis(k,j,i),i=1,size(emis,dim=3))
 		end do
 	close(20)
 	end do
-
+    print *,"*****  DONE POINT SPATIAL *****"
 end subroutine guarda
 subroutine count
 	integer i,j,nn

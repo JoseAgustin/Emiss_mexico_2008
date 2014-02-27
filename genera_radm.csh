@@ -22,9 +22,9 @@ echo $ProcessDir
 #  Build the fecha.txt file
 
 @ mes = 4
-@ dia = 11
+@ dia =11
 
-while ( $dia <= 11)
+while ( $dia <= 11 )
 echo $dia
 cd $ProcessDir/04_temis
 
@@ -43,19 +43,16 @@ End_Of_File
 echo ' '
 echo '  Mes ='$mes 'DIA '$dia
 #
-cd ..
-
 echo 'Point Temporal distribution'
-cd ./07_puntual/
-./Puntual.exe >& puntual.log &
-echo 'Area Temporal distribution'
-cd ../04_temis/
-./Atemporal.exe  >& area.log 
-cd ../05_semisM/
-./MSpatial.exe >& movil.log 
+cd ../07_puntual/
+./Puntual.exe >& ../puntual.log &
 echo 'Movil Temporal distribution'
 cd ../06_temisM/
-./Mtemporal.exe > movil.log 
+./Mtemporal.exe > ../movil.log &
+echo 'Area Temporal distribution'
+cd ../04_temis/
+./Atemporal.exe  >& ../area.log
+
 #
 #echo 'Biogenic'
 #cd ../12_biogenic
@@ -64,9 +61,9 @@ cd ../06_temisM/
 echo 'Speciation distribution PM2.5'
 #
 cd ../09_pm25spec
-./spm25p.exe > puntual.log &
-./spm25m.exe >movil.log &
-./spm25a.exe > area.log&
+./spm25p.exe >> ../puntual.log &
+./spm25m.exe >> ../movil.log &
+./spm25a.exe >> ../area.log&
 #
 echo 'Speciation distribution VOCs'
 #
@@ -74,15 +71,16 @@ cd ../08_spec
 echo '   RADM2 *****'
 ln -sf profile_radm2.csv profile_mech.csv
 echo 'Movile'
-./spm.exe > movil_radm2.log &
+./spm.exe >> ../movil.log &
 echo 'Puntual'
-./spp.exe > puntual_radm2.log  &
+./spp.exe >> ../puntual.log  &
 echo 'Area '
-./spa.exe > area_radm2.log 
+./spa.exe >> ../area.log
 #
 echo ' Guarda'
 cd ../10_storage
-./radm2.exe  > radm2_bio.log 
+./radm2.exe  > ../radm2_bio.log
 #./saprc99bio.exe > saprc_bio.log
 @ dia++
 end 
+#ncrcat -O wrfchemi.d01.radm2.2008-04-* wrfchemi.d01.2008_04_08

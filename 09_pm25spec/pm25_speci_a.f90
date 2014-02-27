@@ -58,7 +58,7 @@ subroutine lee
 	character(len=10) ::cdum
 	character(len=25):: fname
 	logical ::lfil
-	fname='TAPM2_2008.txt'
+	fname='TAPM2_2008.csv'
 	print *, 'Reading : ',trim(fname)
 	open (unit=10,file=fname,status='old',action='read')
 	read(10,*) cdum  ! header
@@ -125,10 +125,11 @@ subroutine lee
 	end do
 300 continue
 	do i=1,size(prof2)
-		print '(2i,<nclass>F)',prof2(i),i,(fclass(i,l),l=1,nclass)
+		write(6,323) prof2(i),i,(fclass(i,l),l=1,nclass)
 	end do
 	close(16)
 	return
+    323 format(2i,<nclass>F)
 end subroutine lee
 
 subroutine calculos
@@ -173,7 +174,7 @@ implicit none
 		end do
 	close(20)
 	end do
-
+    print *,"***** DONE PM2.5 AREA SPECIATION *****"
 end subroutine guarda
 subroutine count
 	integer i,j,nn
