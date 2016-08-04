@@ -9,6 +9,8 @@
 !  to a one line.
 !  ifort -o ASpatial.exe -O3 area_espacial.f90
 !
+!  4/03/2015  Correction in Terminasl 2801500002 and agricultural fires 2801500250
+!
 module land
     integer nl,nf,nm,nnscc,edo, mun
     parameter (nm=2454,nf=7,nnscc=57)
@@ -103,6 +105,7 @@ implicit none
     read (10,*) cdum
     do i=1,nl
         read(10,*)grip(i),idp(i),fp1(i),fp2(i),fp3(i)
+        ! GRIDCODE ID urb,frural,fpob
     end do
     close(10)
 !
@@ -116,12 +119,17 @@ implicit none
         print *,k,nscc(k)
         do i=1,nm
           read(10,*) edo,mun,iem(k,i),(emiss(i,j,k),j=1,nscc(k))
-          if(edo.eq.17 .or.edo .eq.13 .or.edo.eq.29)then!morelos hidalgo tlax
+          if(edo.eq.17 )then!morelos hidalgo tlax
               do j=1,nscc(k)
               emiss(i,j,k)= 3* emiss(i,j,k)
               end do ! j
           end if
-        end do ! i
+          if(edo .eq.13 .or.edo.eq.29)then! hidalgo tlax
+            do j=1,nscc(k)
+                emiss(i,j,k)=1.5 * emiss(i,j,k)
+            end do ! j
+           end if
+       end do ! i
         close(10)
     end do! k
 end subroutine lee
@@ -141,13 +149,14 @@ subroutine calculos
     inven: do i=1,nm          ! municipality
         if(ida(j).eq.iem(k,i)) then
            do l=1,nscc(k)     ! SCC
-             if(scc(k,l).eq.'2801500002'.or.scc(k,l).eq.'2801000002'.or.&
-                scc(k,l).eq.'2801000000'.or.scc(k,l).eq.'2267000000'.or.&
-                scc(k,l).eq.'2801700000'.or.scc(k,l).eq.'2805000000'.or.&
-                scc(k,l).eq.'2270005000') then
-                eagr(j,k,l)=emiss(i,l,k)*fa(j)*1000  ! conversion de Mg to Kg
-             end if
-             if(scc(k,l).eq.'2199007000')eagr(j,k,l)=emiss(i,l,k)*fa(j)*1000*0.8
+             if(scc(k,l).eq.'2801500250') eagr(j,k,l)=emiss(i,l,k)*fa(j)*1000  ! conversion de Mg to kg.
+!             if(scc(k,l).eq.'2801000002') eagr(j,k,l)=emiss(i,l,k)*fa(j)*1000  ! conversion de Mg to kg.
+!             if(scc(k,l).eq.'2801000000') eagr(j,k,l)=emiss(i,l,k)*fa(j)*1000  ! conversion de Mg to kg.
+!             if(scc(k,l).eq.'2267000000') eagr(j,k,l)=emiss(i,l,k)*fa(j)*1000  ! conversion de Mg to kg.
+!             if(scc(k,l).eq.'2801700000') eagr(j,k,l)=emiss(i,l,k)*fa(j)*1000  ! conversion de Mg to kg.
+!             if(scc(k,l).eq.'2805000000') eagr(j,k,l)=emiss(i,l,k)*fa(j)*1000  ! conversion de Mg to kg.
+!             if(scc(k,l).eq.'2270005000') eagr(j,k,l)=emiss(i,l,k)*fa(j)*1000  ! conversion de Mg to kg.
+             if(scc(k,l).eq.'2199007000') eagr(j,k,l)=emiss(i,l,k)*fa(j)*1000*0.8
            end do
            exit inven
         end if
@@ -181,8 +190,8 @@ subroutine calculos
             if(scc(k,l).eq.'2805000000') epob(j,k,l)=emiss(i,l,k)*fp2(j)*1000
             if(scc(k,l).eq.'2805001100') epob(j,k,l)=emiss(i,l,k)*fp2(j)*1000
             if(scc(k,l).eq.'2805020000') epob(j,k,l)=emiss(i,l,k)*fp2(j)*1000
-            if(scc(k,l).eq.'2810001000') epob(j,k,l)=0.0 !bosque
-            if(scc(k,l).eq.'2801500002') epob(j,k,l)=0.0 !Agricola
+            if(scc(k,l).eq.'2810001000') epob(j,k,l)=0.0 !incendios bosque
+            if(scc(k,l).eq.'2801500250') epob(j,k,l)=0.0 !qmas agricolas
             end do
             exit invenp
         end if

@@ -17,6 +17,7 @@
 !   Actualizacion de xlat, xlon         26/08/2012
 !   Conversion de unidades en aerosoles 04/10/2012
 !   Inclusion de NO2 en las emisiones   19/02/2014
+!   Inclusion de poblacion en la salida 10/06/2014
 !   Para año 2008
 module vars
 	integer :: nf    ! number of files antropogenic
@@ -30,19 +31,19 @@ module vars
 	integer :: zlev       ! Layer of emission (1 to 8) 8 lower 1 upper
 	integer,allocatable :: idcg(:) ! ID cell in grid
 	real,allocatable:: eft(:,:,:,:,:)  ! emissions by nx,ny,file,nh,level
-	real,allocatable :: lon(:),lat(:)
-	real,allocatable ::xlon(:,:),xlat(:,:)
+	real,allocatable :: lon(:),lat(:),pop(:)
+	real,allocatable ::xlon(:,:),xlat(:,:),pob(:,:)
 
 	parameter(nf=33,radm=38,nh=24)
 	
     character(len=3) :: cday
     character(len=11),dimension(radm):: ename=(/'E_CO   ','E_NH3  ','E_NO   ', &
-	'E_NO2  ','E_SO2  ','E_ALD  ','E_CH4  ','E_CSL  ','E_ETH  ','E_GLY ', &
+	'E_NO2  ','E_SO2  ','E_ALD  ','E_CH4  ','E_CSL  ','E_ETH  ','E_GLY  ', &
 	'E_HC3  ','E_HC5  ','E_HC8  ','E_HCHO ','E_ISO  ','E_KET  ','E_MACR ', &
 	'E_MGLY ','E_MVK  ','E_OL2  ','E_OLI  ','E_OLT  ','E_ORA1 ','E_ORA2 ', &
 	'E_TOL  ','E_XYL  ','E_PM_10','E_PM25 ','E_SO4I ','E_NO3I ','E_PM25I',&
 	'E_ORGI ','E_ECI  ','E_SO4J ','E_NO3J ','E_PM25J','E_ORGJ ','E_ECJ  '/)
-    character(len= 16),dimension(radm):: cname=(/'Carbon Monoxide','NH3  ','NO   ', &
+    character(len=16),dimension(radm):: cname=(/'Carbon Monoxide ','NH3             ','NO              ', &
 	'NO2  ','SO2  ','ALDEHYDES  ','METHANE','CRESOL','Ethane','Glyoxal', &
 	'HC3  ','HC5  ','HC8  ','HCHO ','ISOPRENE','Acetone','Acrolein', &
 	'MGLY ','Methyl Vinil Ketone  ','Alkenes','alkenes   ','Terminal Alkynes','Formic Acid','Acetic Acid ', &
@@ -100,7 +101,7 @@ subroutine lee
     & 'RADM-2_XYL_P.txt','T_ANNPM10.csv','T_ANNPM25.csv', &
 	& 'GSO4_P.txt','PNO3_P.txt','OTHE_P.txt','POA_P.txt','PEC_P.txt'/
 ! Mole weight
-       DATA WTM /26, 17., 32.25, 657.1, 64., 56., 16., 106., 30.,58.,44.,72.,&   !
+       DATA WTM /28, 17., 32.25, 657.1, 64., 56., 16., 106., 30.,58.,44.,72.,&   !
 !             Cambio en emisiones  NO 30/.93=32.25 NO2= 46/0.07=657.1
 	   &        114., 30., 68., 72., 70., 72.,  70., 28.,56.,42.,46.,&
 	   &         60., 92.,106.,3600.,3600.,3600.,3600.,3600.,3600.,3600./ ! MW 3600 for unit conversion to ug/s
@@ -112,13 +113,13 @@ subroutine lee
 	read (10,*) cdum  !Header
 	read (10,*) nx,ny  !Header
 	ncel=nx*ny
-	allocate(idcg(ncel),lon(ncel),lat(ncel))
-	allocate(xlon(nx,ny),xlat(nx,ny))
+	allocate(idcg(ncel),lon(ncel),lat(ncel),pop(ncel))
+	allocate(xlon(nx,ny),xlat(nx,ny),pob(nx,ny))
 	allocate(eft(nx,ny,nf,nh,8))
     zlev=0
     eft=0
 	do k=1,ncel
-			read(10,*) idcg(k),lon(k),lat(k)
+	read(10,*) idcg(k),lon(k),lat(k),i,pop(k)
 	end do
 !
     do i=1,nx
@@ -126,6 +127,7 @@ subroutine lee
             k=i+(j-1)*nx
             xlon(i,j)=lon(k)
             xlat(i,j)=lat(k)
+            pob(i,j)=pop(k)
         end do
     end do
 !   print *,ncel,xlon(1,1),xlat(1,1)
@@ -249,7 +251,7 @@ subroutine store
 	integer :: ikk
 	integer :: dimids2(2),dimids3(3),dimids4(4)
 	 integer,dimension(radm+1):: id_var
-	 integer :: id_varlong,id_varlat
+	 integer :: id_varlong,id_varlat,id_varpop
 	integer :: id,iu
 	integer :: isp(radm)
 	integer,dimension(NDIMS):: dim,id_dim
@@ -261,7 +263,7 @@ subroutine store
 	character(len=19):: iTime
     character(8)  :: date
     character(10) :: time
-    character(19) :: hoy
+    character(24) :: hoy
   	   DATA isp / 1, 2, 3, 4, 5, 6, 7, 8, 9,10, &
                  11,12,13,14,15, 16,17,18,19,20, &
                  21,22,23,24,25, 26,27,28,29,30, &
@@ -273,14 +275,14 @@ subroutine store
 	 print *,"Guarda Archivo"	 
 ! ******************************************************************
     call date_and_time(date,time)
-    write(hoy,'(A8,x,A10)')date,time
+     hoy=date(7:8)//'-'//mes(date(5:6))//'-'//date(1:4)//' '//time(1:2)//':'//time(3:4)//':'//time(5:10)
     print *,hoy
     !write(current_date(4:4),'(A1)')char(6+48)
-     do periodo=1,1!12
+     do periodo=1,2!2
 	  if(periodo.eq.1) then
         FILE_NAME='wrfchemi.d01.radm2.'//current_date(1:19)         !******
 	   iit= 0
-	   eit=23! 11
+	   eit= 11 !23
 	   iTime=current_date
 	  else if(periodo.eq.2) then
 	   iit=12
@@ -304,9 +306,9 @@ subroutine store
        end do
 
 		  dimids2 = (/id_dim(2),id_dim(1)/)
-	   	  dimids3 = (/id_dim(3),id_dim(2),id_dim(1) /)
+          dimids3 = (/id_dim(3),id_dim(2),id_dim(1) /)
 		  dimids4 = (/id_dim(3),id_dim(4),id_dim(6),id_dim(1)/)
-
+     print *,"Attributos Globales NF90_GLOBAL"
 	  !Attributos Globales NF90_GLOBAL
 	call check( nf90_put_att(ncid, NF90_GLOBAL, "TITLE","EI 2008 emissions for Mexico Area"))
 	call check( nf90_put_att(ncid, NF90_GLOBAL, "START_DATE",iTime))
@@ -334,7 +336,7 @@ subroutine store
     call check( nf90_put_att(ncid, NF90_GLOBAL, "MECHANISM",mecha))
     call check( nf90_put_att(ncid, NF90_GLOBAL, "CREATION_DATE",hoy))
 
-	
+	print *,"Define las variables"
 !  Define las variables
 	call check( nf90_def_var(ncid, "Times", NF90_CHAR, dimids2,id_var(radm+1) ) )
 !  Attributos para cada variable 
@@ -352,6 +354,14 @@ subroutine store
         call check( nf90_put_att(ncid, id_varlat, "description", "LATITUDE, SOUTH IS NEGATIVE") )
         call check( nf90_put_att(ncid, id_varlat, "units", "degree_north"))
         call check( nf90_put_att(ncid, id_varlat, "axis", "Y") )
+         print *," Pob"
+        call check( nf90_def_var(ncid,"POB",NF90_REAL,(/id_dim(3),id_dim(4),id_dim(1)/) ,id_varpop ) )
+            ! Assign  attributes
+        call check( nf90_put_att(ncid, id_varpop, "FieldType", 104 ) )
+        call check( nf90_put_att(ncid, id_varpop, "MemoryOrder", "XYZ") )
+        call check(nf90_put_att(ncid,id_varpop,"description","Population in each grid"))
+        call check( nf90_put_att(ncid, id_varpop, "units", "number"))
+
 	do i=1,radm
 		if(i.lt.26 .or.i.gt.37) then
 			call crea_attr(ncid,4,dimids4,ename(i),cname(i),id_var(i))
@@ -377,21 +387,24 @@ tiempo: do it=iit,eit
 			  write(current_date(12:13),'(A1,A1)')char(id),char(iu)
 			  end if 
 
-   		      Times(1,1)=current_date(1:19)
+  	      Times(1,1)=current_date(1:19)
 			  if (periodo.eq. 1) then
 			    call check( nf90_put_var(ncid,id_var(radm+1),Times,start=(/1,it+1/)) )
 				call check( nf90_put_var(ncid, id_varlong,xlon,start=(/1,1,it+1/)) )
 				call check( nf90_put_var(ncid, id_varlat,xlat,start=(/1,1,it+1/)) )
+                call check( nf90_put_var(ncid, id_varpop,pob,  start=(/1,1,it+1/)) )
 			  else
 		        call check( nf90_put_var(ncid,id_var(radm+1),Times,start=(/1,it-11/)) )
 				call check( nf90_put_var(ncid, id_varlong,xlon,start=(/1,1,it-11/)) )
 				call check( nf90_put_var(ncid, id_varlat,xlat,start=(/1,1,it-11/)) )
+                call check( nf90_put_var(ncid, id_varpop,pob,start=(/1,1,it-11/)) )
+
 			  endif
             end if   ! for kk == 1
             do i=1, nx
                 do j=1, ny
 				  do l=1,zlev
-                   ea(i,j,l,1)=eft(i,j,ikk,it+1,l)!/(CDIM*CDIM) !
+                   ea(i,j,l,1)=eft(i,j,ikk,it+1,l) /(CDIM*CDIM)
 				  end do
                 end do
             end do
@@ -405,9 +418,9 @@ tiempo: do it=iit,eit
 			ea=0.0
             do i=1, nx
                 do j=1, ny
-				  do l=1,zlev
-					ea(i,j,l,1)=eft(i,j,ikk,it+1,l)!/(CDIM*CDIM) ! entre 3x3 km
-				  end do
+			  do l=1,zlev
+				ea(i,j,l,1)=eft(i,j,ikk,it+1,l) /(CDIM*CDIM) !entre 3x3 km
+			  end do
                 end do
             end do
 !
@@ -420,7 +433,7 @@ tiempo: do it=iit,eit
             endif
 		 end do aerosol
 		end do tiempo
-        call check( nf90_close(ncid) )	 
+        call check( nf90_close(ncid) )
 	 end do !periodo
     deallocate(ea)
 
@@ -484,6 +497,42 @@ end subroutine check
 		! print *,"Entro a Attributos de variable",dimids,id,jd
 	  return
 	  end subroutine crea_attr2
-!	  
+!
+! M      M EEEEE  SSSS
+! M M  M M E     S
+! M  M   M EEE    SSS
+! M      M E         S
+! M      M EEEEE SSSS
+         character(len=3)function mes(num)
+          character*2 num
+          select case (num)
+            case('01')
+              mes='Jan'
+             case('02')
+             mes='Feb'
+             case('03')
+             mes='Mar'
+             case('04')
+             mes='Apr'
+             case('05')
+             mes='May'
+             case('06')
+             mes='Jun'
+             case('07')
+             mes='Jul'
+             case('08')
+             mes='Aug'
+             case('09')
+             mes='Sep'
+             case('10')
+             mes='Oct'
+             case('11')
+             mes='Nov'
+             case('12')
+             mes='Dec'
+             end select
+          return
+
+          end function
 !
 end program guarda_nc

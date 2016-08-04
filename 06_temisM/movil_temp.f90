@@ -10,6 +10,7 @@
 !
 !   modificado
 !   02/10/2012  Ajuste en horas dia previo subroutina lee
+!   10/02/2015  Se indica que esta en g/h las emisiones.
 !
 module variables
 integer :: month,daytype
@@ -23,7 +24,7 @@ integer,dimension(nf) :: nscc ! number of scc codes per file
 integer*8,dimension(nnscc) ::iscc 
 integer, allocatable :: idcel(:),idcel2(:)
 integer, allocatable :: mst(:)  ! Difference in number of hours (CST, PST, MST)
-real :: fweek
+real :: fweek                   ! weeks per month
 real,allocatable ::emiM(:,:,:) !Mobile emisions from files cel,ssc,file
 real,allocatable :: emis(:,:,:) ! Emission by cel,file and hour (inorganic)
 real,allocatable :: evoc(:,:,:) ! VOC emissions cel,scc and hour
@@ -37,8 +38,8 @@ character(len=14),dimension(nf) ::efile,casn
 
  data efile /'M_CO.csv','M_NH3.csv','M_NOx.csv','M_SO2.csv', &
 &           'M_PM10.csv','M_PM25.csv','M_VOC.csv'/
- data casn /'TMSO2_2008.csv','TMNOx_2008.csv','TMNH3_2008.csv',&
-&           'TMCO__2008.csv','TMPM102008.csv','TMPM2_2008.csv',&
+ data casn /'TMCO__2008.csv','TMNH3_2008.csv','TMNOx_2008.csv',&
+&           'TMSO2_2008.csv','TMPM102008.csv','TMPM2_2008.csv',&
 &           'TMCOV_2008.csv'/
 
 common /vars/ fweek,nscc,nm,month,daytype,mes,dia,hora,current_date
@@ -101,7 +102,7 @@ subroutine lee
         else 
         write(current_date( 9:10),'(I2)') idia
     end if
-    fweek=7./daym(month)
+    fweek=7./daym(month) !weeks per month
     print *,'Done fecha.txt : ',current_date,month,idia,fweek
 
 !
@@ -364,8 +365,9 @@ subroutine storage
   data cdia/'MON','TUE','WND','THR','FRD','SAT','SUN'/
 
   do k=1,nf-2
+   print *,casn(k),efile(k)
    open(unit=10,file=casn(k),action='write')
-   write(10,*)casn(k),'ID, Hr to Hr24'
+   write(10,*)casn(k),',ID, Hr to Hr24,g/h'
    write(10,'(I8,4A)')size(emis,dim=1),",",current_date,', ',cdia(daytype)
    do i=1,size(emis,dim=1)
      write(10,100)idcel2(i),(emis(i,k,l),l=1,nh)

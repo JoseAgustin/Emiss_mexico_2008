@@ -3,33 +3,37 @@
 !  ifort -O3 -axAVX -o MSpatial.exe movil_spatial.f90
 !
 !  Creado por Jose Agustin Garcia Reynoso el 25/05/2012
+! 
 !
 ! Proposito
 !          Distribución espacial de las emisiones de fuentes moviles
 !          Program that reads EI2008 and spatial allocation
 !
+!   Usa F_moviles.csv
+!
 module vars
-integer nl   !  Number of lines in M_E2008.csv
+integer nl   !  Number of lines in F_movil.csv
 integer nl2  !  Number of lines in grid_pob.txt
+integer npol !  Number of pollutants
+parameter (npol=7 )
 integer,allocatable :: id(:),id2(:) !State Mun code in emis and grid files
 integer,allocatable ::grid(:),grid2(:) ! gridcode in gri_pob
 integer,allocatable :: im(:),im2(:)  ! time lag emis and grid files
 ! scc code in emis and subset of different scc codes.
-integer*8,allocatable ::iscc(:),jscc(:)
-character(len=4),allocatable::pol(:) ! pollutant name
+integer*8,allocatable ::iscc(:),jscc(:),emid(:) ! emid edo mun id
+character (len= 4),dimension(npol) :: pol ! pollutant name
 ! ei emission in emissfile (nl dimension)
 ! uf, rf urban and rural population fraction
 ! pemi emission in grid cell,pollutan,scc category
-real,allocatable:: ei(:),uf(:),rf(:),pemi(:,:,:)
-common /vari/ nl,nl2
+real,allocatable:: ei(:,:),uf(:),rf(:),pemi(:,:,:)
+common /vari/ nl,nl2,pol
 end module vars
-
 program movil_spatial
 use vars
 
 	call lee
   
-    call computations 
+    call computations
   
 	call imprime
 	
@@ -55,95 +59,53 @@ end subroutine imprime
 subroutine computations
 implicit none
 	integer i,j,ii,l,k
+logical,allocatable::xl(:),yl(:)
+    allocate(xl(size(emid)),yl(size(iscc)))
+    xl=.true.
+    yl=.true.
 	print *,' Start doing computations'
-!	print *,(pol(i),i=1,7)
+	print *,(pol(i),i=1,7)
 	call count  ! counts grids and scc different values
 	print *,'end count'
+
 	ii=1
-	do i=1,nl2
-		do j=1,nl-1
-		  if (id2(i).eq.id(j)) then
-		    if(pol(1).eq.pol(j)) then
+   do k=1, size(grid2)
+	do i=1,nl2 ! gri_movil
+       if(grid2(k).eq.grid(i))then
+		do j=1,nl ! F_movil
+		  if (id2(i).eq.emid(j)) then
 			  do l=1,size(jscc)
-			   if(jscc(l).eq.iscc(j))then
-			    do k=1,size(grid2)
-			    if(grid2(k).eq.grid(i))pemi(k,1,l)=pemi(k,1,l)+&
-				&(uf(i)+rf(i))*ei(j)
-				end do! k
+			   if(iscc(j).eq.jscc(l))then
+                 do ii=1,7
+                pemi(k,ii,l)=pemi(k,ii,l)+ &
+				+(uf(i)+rf(i))*ei(j,ii)
+                 end do !ii
+                  yl(j)=.false.
 			   end if!scc
 			  end do! l
-			end if !pol1
-		    if(pol(2).eq.pol(j)) then
-			  do l=1,size(jscc)
-			   if(jscc(l).eq.iscc(j))then
-			    do k=1,size(grid2)
-			    if(grid2(k).eq.grid(i))pemi(k,2,l)=pemi(k,2,l)+&
-				&(uf(i)+rf(i))*ei(j)
-				end do! k
-			   end if!scc
-			  end do! l
-			end if !pol2
-		    if(pol(3).eq.pol(j)) then
-			  do l=1,size(jscc)
-			   if(jscc(l).eq.iscc(j))then
-			    do k=1,size(grid2)
-			    if(grid2(k).eq.grid(i))pemi(k,3,l)=pemi(k,3,l)+&
-				&(uf(i)+rf(i))*ei(j)
-				end do! k
-			   end if!scc
-			  end do! l
-			end if !pol3
-		    if(pol(4).eq.pol(j)) then
-			  do l=1,size(jscc)
-			   if(jscc(l).eq.iscc(j))then
-			    do k=1,size(grid2)
-			    if(grid2(k).eq.grid(i))pemi(k,4,l)=pemi(k,4,l)+&
-				&(uf(i)+rf(i))*ei(j)
-				end do! k
-			   end if!scc
-			  end do! l
-			end if !pol4
-		    if(pol(5).eq.pol(j)) then
-			  do l=1,size(jscc)
-			   if(jscc(l).eq.iscc(j))then
-			    do k=1,size(grid2)
-			    if(grid2(k).eq.grid(i))pemi(k,5,l)=pemi(k,5,l)+&
-				&(uf(i)+rf(i))*ei(j)
-				end do! k
-			   end if!scc
-			  end do! l
-			end if !pol5
-		    if(pol(6).eq.pol(j)) then
-			  do l=1,size(jscc)
-			   if(jscc(l).eq.iscc(j))then
-			    do k=1,size(grid2)
-			    if(grid2(k).eq.grid(i))pemi(k,6,l)=pemi(k,6,l)+&
-				&(uf(i)+rf(i))*ei(j)
-				end do! k
-			   end if!scc
-			  end do! l
-			end if !pol6
-		    if(pol(7).eq.pol(j)) then
-			  do l=1,size(jscc)
-			   if(jscc(l).eq.iscc(j))then
-			    do k=1,size(grid2)
-			    if(grid2(k).eq.grid(i))pemi(k,7,l)=pemi(k,7,l)+&
-				&(uf(i)+rf(i))*ei(j)
-				end do! k
-			   end if!scc
-			  end do! l
-			end if !pol7
-		  end if! id2
+          xl(i)=.false.
+           end if!  id2
 		end do!j
+      end if! grid
 	end do !i
+end do! k
 end subroutine computations
 !
 subroutine lee
 	implicit none
-	integer:: i
+	integer:: i,j,iedo
+    integer:: anio,cint
+    character(len=1):: st
 	character(len=10):: cdum
+    pol(1)='PM10'
+    pol(2)='PM25'
+    pol(3)='NOx'
+    pol(4)='SO2'
+    pol(5)='CO'
+    pol(6)='VOC'
+    pol(7)='NH3'
 	print *,'Starts reading files'
-	open(10,file='M_E2008.csv',status='old',action='read')
+	open(10,file='F_moviles.csv',status='old',action='read')
 	read(10,'(A)') cdum !read header
 	i=0
 	do 
@@ -154,17 +116,14 @@ subroutine lee
     print *,'number of lines',i
 	rewind(10)
 	read(10,'(A)') cdum ! read header
-	allocate(id(i),iscc(i),pol(i),ei(i),im(i))
+	allocate(emid(i),iscc(i),ei(i,npol))
 	nl=i
 	do i=1,nl
-	read(10,*,ERR=140) id(i),iscc(i),pol(i),ei(i),im(i)
-    if(id(i)/1000.eq.13)ei(i)=ei(i)*3.4 !hidalgo
-    if(id(i)/1000.eq.17)ei(i)=ei(i)*3.4 !morelos
-    if(id(i)/1000.eq.29)ei(i)=ei(i)*3.4 !tlaxcala
-!    print *,id(i),iscc(i),pol(i),ei(i),im(i)
+	read(10,*,ERR=140) anio,emid(i),st,emid(i),cdum,cdum,iscc(i),cint,cint,(ei(i,j),j=1,npol)
+!    print *,emid(i),iscc(i),ei(i,7),im(i)
 !   if(i.eq.4) stop
 	end do
-	print *,'End reading file M_E2008.csv'
+	print *,'End reading file F_moviles.csv'
 	close(10)
 !
 	open(10,file='gri_movil.csv',status='old',action='read')
@@ -180,10 +139,14 @@ subroutine lee
 	rewind(10)
 	read(10,'(A)') cdum !read header line 1
 	read(10,'(A)') cdum !read header line 2
-	allocate(grid(i),id2(i),uf(i),rf(i))
+	allocate(grid(i),id2(i),uf(i),rf(i),im(i))
 	nl2=i
 	do i=1,nl2
-	read(10,*) grid(i),id2(i),uf(i),rf(i)
+	read(10,*,ERR=160) grid(i),id2(i),uf(i),rf(i)
+    im(i)=6
+    iedo=int(id2(i)/1000)
+    if(iedo.eq.2.or.iedo.eq.3) im(i)=8
+    if(iedo.eq.8.or.iedo.eq.18.and.iedo.eq.25.and.iedo.eq.26)im(i)=7
 	!print *,i,grid(i),id2(i),uf(i),rf(i)
 	end do
 	print *,'End reading file gri_movil.csv'
@@ -195,8 +158,13 @@ subroutine lee
 	uf=uf*0.90
 	rf=rf*0.10
 	return
-140 print *,"Error in reading file M_E2008",i
+140 print *,"Error in reading file F_moviles.csv",i
+    stop
+160 print *,"Error in reading file gri_movil.csv",i
 end subroutine lee
+!
+!  COUNTING grids, scc
+!
 subroutine count
   integer i,j
   logical,allocatable::xl(:)
@@ -217,12 +185,14 @@ subroutine count
     if(xl(i)) then
 	j=j+1
 	grid2(j)=grid(i)
-    im2(j) = im(i)
+    im2(j)=im(i)
 	end if
   end do
 
-!  print *,'Number of different cells',j
+  !print *,'Number of different cells',j
   deallocate(xl)
+!
+! From emissions file F_moviles.csv
   allocate(xl(size(iscc)))
 
   xl=.true.
@@ -238,9 +208,9 @@ subroutine count
    ii=ii+1
    end if
   end do
-!  print *,'scc different',ii
+  !print *,'different SCC ',ii
   allocate(jscc(ii))
-  allocate(pemi(j,7,ii))
+  allocate(pemi(j,npol,ii))
   pemi=0
    ii=0
     do i=1,nl
@@ -252,5 +222,4 @@ subroutine count
 !  print *,(jscc(i),i=1,ii)
   deallocate(xl)
 end subroutine count
-
 end program
