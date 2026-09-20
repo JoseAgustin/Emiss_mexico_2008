@@ -1,22 +1,72 @@
+# === Compilacion y temporales ===
 .DS_Store
+# Datos de salida en 11_annual (no versionar)
+11_annual/*.nc
 *.[oa]
 *~
 *.mod
+*.MOD
 *.exe
 a.out
 salida*
-wrfche*
 *.log
+*.xlsx
+.tmpfile
 libnetcdf*
-A*.csv
-TA*txt
-M_*.txt
-TM*.txt
-T_ANN*.txt
-RADM-2*
-SAP*
+
+# === Datos intermedios y salidas de cada directorio ===
+# 01_pob
+01_pob/*.csv
+
+# 02_aemis
+02_aemis/A*08.csv
+02_aemis/ANH3_2008.csv
+
+# 04_temis
+04_temis/TA*csv
+
+# 05_semisM
+05_semisM/M_*.csv
+
+# 06_temisM
+06_temisM/TM*.csv
+06_temisM/GSO4_M.csv
+06_temisM/OTHE_M.csv
+06_temisM/POA_M.csv
+
+# 07_puntual
+07_puntual/T_ANN*.csv
+
+# 08_spec
+08_spec/RA*txt
+08_spec/SAP*txt
+08_spec/CBM05*txt
+08_spec/MOZART*txt
+08_spec/profile_mech.csv
+
+# 09_pm25spec
 09_pm25spec/*A.txt
 09_pm25spec/*P.txt
 09_pm25spec/*M.txt
-T_A*csv
-TB*.txt
+
+# 10_storage
+10_storage/wrfc*
+
+# PostScript y otros
+ncview.*.ps
+
+# === Archivos generados por Autotools (no versionar) ===
+Makefile
+Makefile.in
+*/Makefile
+*/Makefile.in
+aclocal.m4
+autom4te.cache/
+build-aux/
+config.status
+config.log
+configure
+configure~
+
+# Generado por configure a partir de ejecuta.sh.in
+ejecuta.sh

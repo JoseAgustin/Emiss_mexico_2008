@@ -2,7 +2,7 @@
 !	agg_m.f90
 !	
 !
-!  Creado por Jose Agustin Garcia Reynoso el31/05/12.
+!  Creado por Jose Agustin Garcia Reynoso el 31/05/12.
 !
 ! Proposito:
 !               Especiacion y agreacion en diferenes especies y
@@ -48,7 +48,7 @@ subroutine lee
 	implicit none
 	integer :: i,j,id,idum,l
 	integer*8::isccf
-	real,dimension(39)::fagg ! aggregation factor for 30 species
+	real,dimension(40)::fagg ! aggregation factor for 30 species
 	character(len=10)::cdum
 	logical :: lfil
 	print *,"TMCOV_2008.csv"
@@ -92,7 +92,7 @@ subroutine lee
 	read(16,*)cdum,cprof
 	read(16,*) nclass
 	print *,'Speciation for Mechanism: ',trim(cprof)
-	if(nclass.gt.39) stop "Change size in fagg dimension"
+	if(nclass.gt.40) stop "Change size in fagg dimension"
 	rewind(16)
 	allocate(cname(nclass))
 	read(16,*)cdum
@@ -214,19 +214,24 @@ subroutine calculos
 	end do
 end subroutine calculos
 subroutine guarda
-	implicit none
 	integer i,j,k
 	character(len=20)::fname
+    real suma
 	print *,maxval(emis),'Valor maximo'
 	do j=1,size(emis,dim=2)
+    suma=0
 	fname=trim(cprof)//'_'//trim(cname(j))//'_M.txt'
 	open(unit=20,file=fname,action='write')
 	write(20,'(4A)')cname(j),',',trim(cprof),', Emissions'
 	write(20,*) size(emis,dim=1),current_date
 		do k=1,size(emis,dim=1)
 			write(20,'(I7,",",24(ES12.5,","))')grid2(k),(emis(k,j,i),i=1,size(emis,dim=3))
+        do i=1,size(emis,dim=3)
+            suma=suma+emis(k,j,i)
+        end do
 		end do
 	close(20)
+    write (6,*)cname(j),',',suma
 	end do
     print *,"*****  DONE MOVIL SPECIATION *****"
 end subroutine guarda

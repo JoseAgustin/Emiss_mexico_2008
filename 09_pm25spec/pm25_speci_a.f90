@@ -129,7 +129,7 @@ subroutine lee
 	end do
 	close(16)
 	return
-    323 format(2i,<nclass>F)
+    323 format(2i10,55F10.4)
 end subroutine lee
 
 subroutine calculos
@@ -170,12 +170,20 @@ implicit none
 	write(20,'(A,A)')cname(j), 'Emissions'
 	write(20,*) size(grid2),current_date,', ',cdia
 		do k=1,size(grid2)
-			write(20,'(I7,x,<nh>(ES11.4,x))')grid2(k),(emis(k,j,i),i=1,nh)
+			write(20,'(I7,x,24(ES0.4,x))')grid2(k),(emis(k,j,i),i=1,size(emis,dim=3))
+            do i=1,size(emis,dim=3)
+            end do
 		end do
+    write(6,*)cname(j),",",sum(emis(:,j,:))
 	close(20)
 	end do
     print *,"***** DONE PM2.5 AREA SPECIATION *****"
 end subroutine guarda
+!                       _
+!  ___ ___  _   _ _ __ | |_
+! / __/ _ \| | | | '_ \| __|
+!| (_| (_) | |_| | | | | |_
+! \___\___/ \__,_|_| |_|\__|
 subroutine count
 	integer i,j,nn
 	logical,allocatable::xl(:)

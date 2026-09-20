@@ -7,6 +7,8 @@
 ! Proposito:
 !          Realiza la distribucion temporal de las emisiones de area
 !   ifort -O3 -axAVX atemporal.f90 -o Atemporal.exe
+!   -c -parallel -guide 
+!  -parallel -Dtest_gap -opt-report=1 -opt-report-phase=par -opt-report-file=stdout atemporal.f90
 !
 !   modificado
 !   14/08/2012  nombre archivos de PM 
@@ -14,25 +16,24 @@
 !
 module variables
 integer :: month,daytype
-integer :: nf !number of emission files
-integer :: nnscc !max number of scc descriptors in input files
+integer,parameter :: nf=7 !number of emission files
+integer,parameter :: nnscc=58 !max number of scc descriptors in input files
+integer,parameter ::juliano=365
+integer,parameter :: nh=24 ! number of hour per day
 integer :: nm ! line number in emissions file
-integer :: nh ! number of hour per day
 integer :: lh ! line number in uso horario
-integer ::juliano
-parameter (nf=7,nh=24, nnscc=57,juliano=365)
 integer,dimension(nf) :: nscc ! number of scc codes per file
 integer*8,dimension(nnscc) ::iscc 
-integer, allocatable :: idcel(:),idcel2(:)
+integer, allocatable :: idcel(:),idcel2(:),idcel3(:)
 integer, allocatable :: idsm(:),idsmh(:) ! state municipality IDs emiss and usoH
-integer, allocatable :: mst(:)  ! Difference in number of hours (CST, PST, MST)
+integer, allocatable :: mst(:)  ! Difference in number of hours (CST, PST, MST,EST)
 real ::fweek
 real,allocatable ::emiA(:,:,:) !Area emisions from files cel,ssc,file
 real,allocatable :: emis(:,:,:) ! Emission by cel,file and hour (inorganic)
 real,allocatable :: epm2(:,:,:) ! PM25 emissions cel,scc and hour
 real,allocatable :: evoc(:,:,:) ! VOC emissions cel,scc and hour
 real,dimension(nnscc,nf) :: mes,dia,diap ! dia currentday, diap previous day
-real,dimension(nnscc,nf,nh):: hCST,hMST,hPST
+real,dimension(nnscc,nf,nh):: hCST,hMST,hPST,hEST
 integer,dimension(3,nnscc,nf):: profile  ! 1=mon 2=weekday 3=hourly
 character(len=3),dimension(juliano):: cdia
 character (len=19) :: current_date
@@ -46,7 +47,7 @@ character(len=14),dimension(nf) ::efile,casn
 &           'TACO__2008.csv','TAPM102008.csv','TAPM2_2008.csv',&
 &           'TAVOC_2008.csv'/
 
-common /vars/ fweek,nscc,lh,month,daytype,mes,dia,hora,current_date
+common /vars/ fweek,nscc,nm,lh,month,daytype,mes,dia,hora,current_date
 end module
 !
 !  Progran  atemporal.f90
@@ -108,8 +109,8 @@ subroutine lee
     fweek= 7./daym(month)
     print *,'Done fecha.txt : ',current_date,month,idia,fweek
 !
-    print *,"READING uso_horario.csv file"
-    open (unit=10,file='uso_horario.csv',status='OLD',action='read')
+    print *,"READING Huso_horario.csv file"
+    open (unit=10,file='huso_horario.csv',status='OLD',action='read')
     lh=0
     read(10,*)cdum
         do
@@ -124,7 +125,7 @@ subroutine lee
     do i=1,lh
     read (10,*) idsmh(i),mst(i)
     end do
-    print *,'Done uso_horario.csv :'
+    print *,'Done Huso_horario.csv :'
     close(10)
 !
 !   Days in 2008 year
@@ -157,11 +158,14 @@ subroutine lee
 	   nm=nm+1
 	end do
 100	 continue
-     !print *,nm
+     !print *,"  mn= ",nm
 	 rewind(10)
 	 if(k.eq.1) then
-	allocate(idcel(nm),idcel2(nm),idsm(nm))
-	allocate(emiA(nf,nm,nnscc))
+     allocate(idcel(nm),idcel2(nm),idcel3(nm),idsm(nm))
+     allocate(emiA(nf,nm,nnscc))
+     idsm=0
+    else
+     idsm=0
 	end if
 	read (10,'(A)') cdum
 	read (10,'(A)') cdum
@@ -169,6 +173,7 @@ subroutine lee
 		read(10,*) idcel(i),idsm(i),rdum,rdum,(emiA(k,i,j),j=1,nscc(k))
 	        !print *,idcel(i),idsm(i),(emiA(k,i,j),j=1,16),nscc(k),k
 	end do
+    idcel3=idcel
 	close(10)
 	print *,"Done reading: ",efile(k)
 !  REading and findig monthly, week and houry code profiles
@@ -181,7 +186,8 @@ subroutine lee
 	read (15,'(A)') cdum
       do
 	  read(15,*,END=200)jscc,imon,iwk,ipdy
-	    do i=1,nscc(k)
+!dir$ loop count min(512)
+    do i=1,nscc(k)
 		  if(iscc(i).eq.jscc) then
 		    profile(1,i,k)=imon
 		    profile(2,i,k)=iwk
@@ -253,10 +259,19 @@ subroutine lee
 	end if
 !
 	read (18,'(A)') cdum
+!dir$ loop count min(256)
      do
 	    read(18,*,END=230)jscc,(itfrc(l),l=1,25)
 	    do i=1,nscc(k)
 	      if(jscc.eq.profile(3,i,k)) then
+            m=4
+            do l=1,nh
+            if(m+l.gt.nh) then
+              hEST(i,k,m+l-nh)=real(itfrc(l))/real(itfrc(25))*diap(i,k)
+            else
+              hEST(i,k,m+l)=real(itfrc(l))/real(itfrc(25))*dia(i,k)
+            end if
+            end do
 		    m=5
 		    do l=1,nh
 			if(m+l.gt.nh) then
@@ -286,7 +301,7 @@ subroutine lee
      end do    ! File 18
 230 continue
 
-     if(daytype.eq.1) then
+     if(daytype.eq.1 .or. daytype.ge.6) then !lunes, Sabado y Domingo
         inquire(19,opened=fil2)
         if(.not.fil2) then
             open(unit=19,file=nfilep,status='OLD',action='read')
@@ -298,26 +313,64 @@ subroutine lee
         read(19,*,END=240)jscc,(itfrc(l),l=1,25)
         do i=1,nscc(k)
          if(jscc.eq.profile(3,i,k)) then
+            m=4
+            do l=1,nh
+              if(daytype.eq.1 )then
+                if(m+l.gt.nh) then
+                  hEST(i,k,m+l-nh)=real(itfrc(l))/real(itfrc(25))*diap(i,k)
+                end if
+              else
+                if(m+l.gt.nh) then
+                  hEST(i,k,m+l-nh)=real(itfrc(l))/real(itfrc(25))*diap(i,k)
+                else
+                  hEST(i,k,m+l)=real(itfrc(l))/real(itfrc(25))*dia(i,k)
+                end if
+              end if  ! daytype
+            end do
            m=5
            do l=1,nh
-             if(m+l.gt.nh) then
+            if(daytype.eq.1) then
+              if(m+l.gt.nh) then
                 hCST(i,k,m+l-nh)=real(itfrc(l))/real(itfrc(25))*diap(i,k)
-             end if
+              end if
+            else
+              if(m+l.gt.nh) then
+                hCST(i,k,m+l-nh)=real(itfrc(l))/real(itfrc(25))*diap(i,k)
+              else
+                hCST(i,k,m+l)=real(itfrc(l))/real(itfrc(25))*dia(i,k)
+              end if
+            end if !daytype
            end do
            m=6
            do l=1,nh
-             if(m+l.gt.nh) then
+            if(daytype.eq.1) then
+              if(m+l.gt.nh) then
                 hMST(i,k,m+l-nh)=real(itfrc(l))/real(itfrc(25))*diap(i,k)
-             end if
+              end if
+            else
+              if(m+l.gt.nh) then
+                hMST(i,k,m+l-nh)=real(itfrc(l))/real(itfrc(25))*diap(i,k)
+              else
+                hMST(i,k,m+l)=real(itfrc(l))/real(itfrc(25))*dia(i,k)
+              end if
+            end if !daytype
            end do
            m=7
            do l=1,nh
-             if(m+l.gt.nh) then
+            if(daytype.eq.1 )then
+              if(m+l.gt.nh) then
                 hPST(i,k,m+l-nh)=real(itfrc(l))/real(itfrc(25))*diap(i,k)
-             end if
+              end if
+            else
+              if(m+l.gt.nh) then
+                hPST(i,k,m+l-nh)=real(itfrc(l))/real(itfrc(25))*diap(i,k)
+              else
+                hPST(i,k,m+l)=real(itfrc(l))/real(itfrc(25))*dia(i,k)
+              end if
+            end if ! daytype
            end do
          end if
-        end do !i 
+        end do !i
         end do ! File 19
      end if
  240 continue
@@ -338,100 +391,72 @@ subroutine compute
 	integer i,j,k,l,ival,ii
 !
     call count ! computes the number of different cells
-    call uso_horario ! identifies the time lag in each cell
+    call huso_horario ! identifies the time lag in each cell
 !
 ! For inorganics
-!	
+!
+    print *,"   Compute Inorganics"
     emis=0
     mes=mes*fweek! weeks per month
     do k=1,nf-2
-	  ival=idcel(1)
-	  ii=1
+      print *,efile(k)
+!dir$ loop count min(512)
+	  do ii=1,size(idcel2)
 	  do i=1,nm
-		 if(ival.eq.idcel(i))then
+		 if(idcel2(ii).eq.idcel(i))then
 		  do l=1,nh
 	        do j=1,nscc(k)
+    if(idsm(i).eq.5) emis(ii,k,l)=emis(ii,k,l)+emiA(k,i,j)*mes(j,k)*hEST(j,k,l)
     if(idsm(i).eq.6) emis(ii,k,l)=emis(ii,k,l)+emiA(k,i,j)*mes(j,k)*hCST(j,k,l)
     if(idsm(i).eq.7) emis(ii,k,l)=emis(ii,k,l)+emiA(k,i,j)*mes(j,k)*hMST(j,k,l)
     if(idsm(i).eq.8) emis(ii,k,l)=emis(ii,k,l)+emiA(k,i,j)*mes(j,k)*hPST(j,k,l)
 		    end do
 		  end do
-		  else
-		  ival=idcel(i)
-		  ii=ii+1
-		   if(ii+1 .le.size(emis,dim=1)) then
-		    do l=1,nh
-	         do j=1,nscc(k)
-    if(idsm(i).eq.6) emis(ii,k,l)=emis(ii,k,l)+emiA(k,i,j)*mes(j,k)*hCST(j,k,l)
-    if(idsm(i).eq.7) emis(ii,k,l)=emis(ii,k,l)+emiA(k,i,j)*mes(j,k)*hMST(j,k,l)
-    if(idsm(i).eq.8) emis(ii,k,l)=emis(ii,k,l)+emiA(k,i,j)*mes(j,k)*hPST(j,k,l)
-		     end do
-			end do
-
-		   end if
 		  end if
+        end do
 	  end do
 	end do
 !
 !  For PM2.5
-!  
+!
+    print *,"   Compute PM2.5"
     epm2=0
 	k=nf-1
-   ii=1
-   ival=idcel(1)
-   do i=1,nm
-   if(ival.eq.idcel(i))then
+   do ii=1,size(idcel2)
+    do i=1,nm
+    if(idcel2(ii).eq.idcel(i))then
 		  do l=1,nh
 	        do j=1,nscc(k)
+    if(idsm(i).eq.5) epm2(ii,j,l)=epm2(ii,j,l)+emiA(k,i,j)*mes(j,k)*hEST(j,k,l)
     if(idsm(i).eq.6) epm2(ii,j,l)=epm2(ii,j,l)+emiA(k,i,j)*mes(j,k)*hCST(j,k,l)
     if(idsm(i).eq.7) epm2(ii,j,l)=epm2(ii,j,l)+emiA(k,i,j)*mes(j,k)*hMST(j,k,l)
     if(idsm(i).eq.8) epm2(ii,j,l)=epm2(ii,j,l)+emiA(k,i,j)*mes(j,k)*hPST(j,k,l)
 		    end do
 		  end do
-		  else
-		  ival=idcel(i)
-		  ii=ii+1
-		   if(ii+1 .le.size(emis,dim=1)) then
-		    do l=1,nh
-	         do j=1,nscc(k)
-    if(idsm(i).eq.6) epm2(ii,j,l)=emiA(k,i,j)*mes(j,k)*hCST(j,k,l)
-    if(idsm(i).eq.7) epm2(ii,j,l)=emiA(k,i,j)*mes(j,k)*hMST(j,k,l)
-    if(idsm(i).eq.8) epm2(ii,j,l)=emiA(k,i,j)*mes(j,k)*hPST(j,k,l)
-		     end do
-			end do
-		   end if
-		  end if
-	  end do
-!	
+      end if
+     end do
+    end do
+!
 !  For VOCs
 !  
     evoc=0
 	k=nf
-   ii=1
-   ival=idcel(1)
-   do i=1,nm
-   if(ival.eq.idcel(i))then
+
+print *,"   Compute  VOCs"
+   do ii=1,size(idcel2)
+    do i=1,nm
+     if(idcel2(ii).eq.idcel(i))then
 		  do l=1,nh
 	        do j=1,nscc(k)
+    if(idsm(i).eq.5) evoc(ii,j,l)=evoc(ii,j,l)+emiA(nf,i,j)*mes(j,nf)*hEST(j,nf,l)
     if(idsm(i).eq.6) evoc(ii,j,l)=evoc(ii,j,l)+emiA(nf,i,j)*mes(j,nf)*hCST(j,nf,l)
     if(idsm(i).eq.7) evoc(ii,j,l)=evoc(ii,j,l)+emiA(nf,i,j)*mes(j,nf)*hMST(j,nf,l)
     if(idsm(i).eq.8) evoc(ii,j,l)=evoc(ii,j,l)+emiA(nf,i,j)*mes(j,nf)*hPST(j,nf,l)
 		    end do
 		  end do
-		  else
-		  ival=idcel(i)
-		  ii=ii+1
-		   if(ii+1 .le.size(emis,dim=1)) then
-		    do l=1,nh
-	         do j=1,nscc(k)
-    if(idsm(i).eq.6) evoc(ii,j,l)=emiA(nf,i,j)*mes(j,nf)*hCST(j,nf,l)
-    if(idsm(i).eq.7) evoc(ii,j,l)=emiA(nf,i,j)*mes(j,nf)*hMST(j,nf,l)
-    if(idsm(i).eq.8) evoc(ii,j,l)=emiA(nf,i,j)*mes(j,nf)*hPST(j,nf,l)
-		     end do
-			end do
-		   end if
-		  end if
-	  end do
+      end if
+     end do
+    end do
 	end subroutine compute
 !
 subroutine storage
@@ -439,7 +464,7 @@ subroutine storage
   integer i,j,k,l
   character(len=3):: cdia(7)
   data cdia/'MON','TUE','WND','THR','FRD','SAT','SUN'/
-
+ print *,"Storage"
   do k=1,nf-2
    open(unit=10,file=casn(k),action='write')
    write(10,*)casn(k),'ID, Hr to Hr24'
@@ -475,34 +500,123 @@ subroutine storage
     print *,"*****  DONE Temporal Area *****"
 110 format(I7,",",I10,",",23(ES12.3,","),ES12.3)
 end subroutine storage
+!                       _
+!  ___ ___  _   _ _ __ | |_
+! / __/ _ \| | | | '_ \| __|
+!| (_| (_) | |_| | | | | |_
+! \___\___/ \__,_|_| |_|\__|
 subroutine count
   integer i,j
-  idcel2(1)=idcel(1)
+  integer idum
+   call hpsort(size(idcel3))
+!  do i=1,nm-1
+!    do j=1,nm-i
+!     if(idcel3(j).gt.idcel3(j+1)) then
+!       idum = idcel3(j)
+!       idcel3(j)=idcel3(j+1)
+!       idcel3(j+1)=idum
+!     end if
+!    end do
+!  end do
+  idcel2(1)=idcel3(1)
   j=1
   do i=2,nm
-   if(idcel2(j).ne.idcel(i)) then
+   if(idcel2(j).ne.idcel3(i)) then
     j=j+1
-	idcel2(j)=idcel(i)
+	idcel2(j)=idcel3(i)
 	end if
-	 
   end do
+  deallocate(idcel3)
+  allocate(idcel3(j))
   print *,'Number of different cells',j
+
+  open(unit=123,file="index.csv")
+  write(123,*)j,"Index"
+  do i=1,j
+   write(123,'(I8)')idcel2(i)
+   idcel3(i)=idcel2(i)
+  end do
+  deallocate(idcel2)
+  allocate(idcel2(j))
+  idcel2=idcel3
+  close(123)
   allocate(emis(j,nf-2,nh))
-  allocate( epm2(j,nscc(nf-1),nh),evoc(j,nscc(nf),nh))
+  allocate(epm2(j,nscc(nf-1),nh),evoc(j,nscc(nf),nh))
    emis=0
    evoc=0
+  deallocate(idcel3)
 end subroutine count
-subroutine uso_horario
+subroutine huso_horario
     integer ::i,j
-    !print *,'Start uso horario'
+    !print *,'Start huso horario'
+!dir$ loop count min(512)
     do i=1,nm
+!dir$ loop count min(512)
         do j=1,lh
         if(idsm(i).eq.idsmh(j) )idsm(i)=mst(j)
         end do
     end do
-    if(maxval(idsm).gt.8 .or.minval(idsm).lt.6) then
-        print *,'Error item:', MAXLOC(idsm),'value:', maxval(idsm)
-        STOP 'Value must be between 6 to 8'
+  if(maxval(idsm).ge.9 ) then
+    print *,'Error item:', MAXLOC(idsm),'value:', idsm(MAXLOC(idsm)),maxval(idsm)
+    STOP 'Value must be less or equal to 8'
+  end if
+  if(minval(idsm).le. 4 ) then
+    print *,'Error item:', MINLOC(idsm),'value:', idsm(MINLOC(idsm)),minval(idsm)
+    STOP 'Value must be larger or equal to 5'
+  end if
+end subroutine huso_horario
+subroutine hpsort(n)
+  implicit none
+  integer n
+  integer i,ir,j,l
+  real rra
+    if (n.lt.2) return
+    l=n/2+1
+    ir=n
+10 continue
+    if(l.gt.1)then
+      l=l-1
+      rra=idcel3(l)
+    else
+      rra=idcel3(ir)
+      idcel3(ir)=idcel3(1)
+      ir=ir-1
+      if(ir.eq.1)then
+        idcel3(1)=rra
+        return
+      endif
+    endif
+  i=l
+  j=l+l
+20 if(j.le.ir)then
+    if(j.lt.ir)then
+      if(idcel3(j).lt.idcel3(j+1))j=j+1
     end if
-end subroutine uso_horario
+    if(rra.lt.idcel3(j))then
+      idcel3(i)=idcel3(j)
+      i=j
+      j=j+j
+    else
+      j=ir+1
+    endif
+   goto 20
+  endif
+    idcel3(i)=rra
+  goto 10
+end subroutine hpsort
+subroutine piksrt(n)
+INTEGER n
+integer i,j
+real a
+do j=2,N
+  a=idcel3(j)
+  do i=j-1,1,-1
+    if(idcel3(i).le.a) goto 10
+     idcel3(i+1)=idcel3(i)
+  end do
+  i=0
+10 idcel3(i+1)=a
+end do
+return
+end subroutine piksrt
 end program atemporal

@@ -28,10 +28,10 @@ real,allocatable :: ea(:,:)      ! emissions en TCOV file grid , nh
 real,allocatable :: emis(:,:,:)  ! emissions id cel, category, hours
 real,allocatable :: fclass(:,:,:)! aggregation factor by size(prof2), species, nclass
 character(len=4),allocatable::cname(:)
-character(len=3) ::cdia
+character(len=3) :: cdia
 character (len=19) :: current_date,cprof
 
-parameter (nspecies=292,nh=24)
+parameter (nspecies=292,nh=24,ncat=40)
 
 common /date/ current_date,cdia,cprof
 end module var_agg
@@ -51,10 +51,11 @@ subroutine lee
 	implicit none
 	integer :: i,j,id,idum,l
 	integer*8::isccf
-	real,dimension(39)::fagg ! aggregation factor for 34 species
+	real,dimension(ncat)::fagg ! aggregation factor for 34 species
 	character(len=10)::cdum
 	logical :: lfil
-	print *,"TAVOC_2008.csv"
+	print *,"Inicia lectura"
+    print *,"  TAVOC_2008.csv"
 	open (unit=10,file='TAVOC_2008.csv',status='old',action='read')
 	read(10,*) cdum  ! header
 	read(10,*) lfa,current_date,cdia  ! header
@@ -64,7 +65,7 @@ subroutine lee
 	i=i+1
 	end do
 100 continue
-	print *,'Number in TAVOC_2008',i,lfa
+	print *,'  Number of rows in TAVOC_2008',i
 	lfa=i
 	allocate(grid(lfa),iscc(lfa),ea(lfa,nh),profile(lfa))
 	rewind(10)
@@ -86,15 +87,15 @@ subroutine lee
 200 continue
 	close(15)
 	!print '(15I5)',(profile(i),i=1,lfa)
-	print *,'Start count'	
+	print *,'  Start count'
 	call count  ! counts the number of different profiles
-	print *,'Finishing count'
+	print *,'  Finishing count'
 ! READING  and findign speciation for profiles
 	open(unit=16,file='profile_mech.csv',status='old',action='read')
 	read(16,*)cdum,cprof
 	read(16,*) nclass
-	print *,'Speciation for Mechanism: ',trim(cprof)
-	if(nclass.gt.39) stop "Change size in fagg dimension"
+	print *,'  Speciation for Mechanism: ',trim(cprof)
+	if(nclass.gt.ncat) stop "Change size in fagg dimension ncat"
 	rewind(16)
 	allocate(cname(nclass))
 	read(16,*)cdum
@@ -102,15 +103,18 @@ subroutine lee
 	!print *,nclass
 	!print '(<nclass>(A,x))',cname
 	j=0
+    isp=0
+!dir$ loop count min(512)
 	do
 		read(16,*,end=300,ERR=300)id
+!dir$ loop count min(256)
 		do i=1,size(prof2)
 		if(id.eq.prof2(i)) isp(i)=isp(i)+1
 		end do
 		j=j+1
 	end do
 300 continue
-	!print *,isp,maxval(isp)
+	!print *,"isp,maxval",isp,maxval(isp)
 	allocate(fclass(size(prof2),maxval(isp),nclass))
 	rewind(16)
 	read(16,*)cdum  ! Header 1
@@ -118,11 +122,10 @@ subroutine lee
 	isp=0
 	do
 		read(16,*,end=400,ERR=400)id,idum,(fagg(i),i=1,nclass)
+!dir$ loop count min(256)
 		do i=1,size(prof2)
 		if(id.eq.prof2(i)) then
 			isp(i)=isp(i)+1
-!dir$ parallel
-!dir$ loop count min(256)
 			do l=1,nclass
 				fclass(i,isp(i),l)=fagg(l)
 			end do
@@ -131,11 +134,12 @@ subroutine lee
 	end do
 400 continue
 !	i=1
-!	do j=1,isp(i)			
+!	do j=1,isp(i)
 !		print '(2i,<nclass>F)',prof2(i),j,(fclass(i,j,l),l=1,nclass)
 !	end do
 
 	close(16)
+print *,'Fin lectura'
 end subroutine lee
 
 subroutine count
@@ -143,57 +147,36 @@ subroutine count
 	logical,allocatable::xl(:)
 	nn=size(profile)
 	allocate(xl(nn))
-!dir$ loop count min(512)
 	xl=.true.
-	do i=1,40!nn-1
-!dir$ loop count min(512)
-		do j=i+1,41!nn
+	do i=1,60!nn-1
+		do j=i+1,61!nn
 			if(profile(j).eq.profile(i).and.xl(j)) 	xl(j)=.false.
 		end do
 	end do
 	j=0
-	do i=1,41!nn
+	do i=1,61!nn
 		if(xl(i)) j=j+1
 	end do
 	allocate(prof2(j),isp(j))
 	j=0
-	do i=1,41!nn
+	do i=1,61!nn
 		if(xl(i)) then
 		j=j+1
 		prof2(j)=profile(i)
 	end if
 	end do
 !
- print *,'Number different profiles',j !,prof2
+ print *,'   Number different profiles',j !,prof2
 !
   deallocate(xl)
-  allocate(xl(size(iscc)))
-
-!dir$ loop count min(512)
-  xl=.true.
-!dir$ parallel
-!dir$ loop count min(64)
-  do i=1,lfa-1
-   do j=i+1,lfa
-   if(grid(j).eq.grid(i).and.xl(j)) xl(j)=.false.
-   end do
-  end do
-  j=0
-!dir$ loop count min(512)
-  do i=1,lfa
-    if(xl(i)) j=j+1
-  end do
+  open(unit=123,file='aindex.csv',status='old')
+  read(123,*)j
   allocate(grid2(j))
-  j=0
-  do i=1,lfa
-    if(xl(i)) then
-	j=j+1
-	grid2(j)=grid(i)
-	end if
+  do i=1,j
+    read(123,*)grid2(i)
   end do
 
-  print *,'Number of different cells',j
-  deallocate(xl)
+  print *,'   Number of different cells',j
 end subroutine count
 subroutine calculos
 	implicit none
@@ -201,12 +184,11 @@ subroutine calculos
 	integer ns,ng,ii
 	print *,'Starting computations'
 	allocate (emis(size(grid2),nclass,nh))
-!dir$ loop count min(16)
 	emis=0
 	ng =size(grid2)
 	ns =size(prof2)
 	do ii=1,lfa
-!dir$ loop count min(64)
+!dir$ loop count min(256)
 	  do k=1,ng		! grid
 		if(grid(ii).eq.grid2(k)) then
 			do i=1,ns  !profiles
@@ -225,21 +207,26 @@ subroutine calculos
 	end do
 end subroutine calculos
 subroutine guarda
-	implicit none
 	integer i,j,k
+    real suma
 	character(len=20)::fname
-!dir$ loop count min(4)
 	print *,maxval(emis),'Valor maximo'
-!dir$ loop count min(4)
+!dir$ loop count min(256)
 	do j=1,size(emis,dim=2)
+    suma=0
 	fname=trim(cprof)//'_'//trim(cname(j))//'_A.txt'
 	open(unit=20,file=fname,action='write')
 	write(20,'(4A)')cname(j),',',trim(cprof),', Emissions'
 	write(20,*) size(emis,dim=1),current_date,', ',cdia
 		do k=1,size(emis,dim=1)
 			write(20,'(I7,",",24(ES11.4,","))')grid2(k),(emis(k,j,i),i=1,size(emis,dim=3))
+!dir$ loop count min(256)
+        do i=1,size(emis,dim=3)
+            suma=suma+emis(k,j,i)
+        end do
 		end do
 	close(20)
+    write (6,*)cname(j),',',suma
 	end do
     print *,"*****   DONE SPECIATION AREA *****"
 end subroutine guarda

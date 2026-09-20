@@ -31,11 +31,11 @@ end module vars
 program movil_spatial
 use vars
 
-	call lee
-  
+    call lee
+
     call computations
-  
-	call imprime
+
+    call imprime
 	
 contains
 subroutine imprime
@@ -52,17 +52,18 @@ subroutine imprime
 	close(10)
 	end do
     print *,"+++++   DONE SPATIAL MOVIL +++++"
+#ifndef PGI
 210 format(i6,",",<size(jscc)>(I11,","))
 220 format(i6,",",<size(jscc)>(ES12.4,","),I2)
+#else
+210 format(i6,",",17(I11,","))
+220 format(i6,",",17(ES12.4,","),I2)
+#endif
 end subroutine imprime
 !
 subroutine computations
 implicit none
 	integer i,j,ii,l,k
-logical,allocatable::xl(:),yl(:)
-    allocate(xl(size(emid)),yl(size(iscc)))
-    xl=.true.
-    yl=.true.
 	print *,' Start doing computations'
 	print *,(pol(i),i=1,7)
 	call count  ! counts grids and scc different values
@@ -77,13 +78,11 @@ logical,allocatable::xl(:),yl(:)
 			  do l=1,size(jscc)
 			   if(iscc(j).eq.jscc(l))then
                  do ii=1,7
-                pemi(k,ii,l)=pemi(k,ii,l)+ &
+                pemi(k,ii,l)=pemi(k,ii,l)  &
 				+(uf(i)+rf(i))*ei(j,ii)
                  end do !ii
-                  yl(j)=.false.
 			   end if!scc
 			  end do! l
-          xl(i)=.false.
            end if!  id2
 		end do!j
       end if! grid

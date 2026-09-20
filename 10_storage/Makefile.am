@@ -1,0 +1,8 @@
+include $(top_srcdir)/common.am
+
+# Este programa usa la interfaz Fortran de NetCDF
+AM_FCFLAGS += $(NETCDF_FCFLAGS)
+LDADD       = $(NETCDF_LIBS)
+
+bin_PROGRAMS   = radm2
+radm2_SOURCES  = guarda2_nc2008.f90

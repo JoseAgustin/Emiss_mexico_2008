@@ -331,7 +331,7 @@ subroutine storage
    end do
    close(unit=10)
   end do
-100 format(I7,x,<nh>ES12.3)
+100 format(I7,x,24ES12.3)
 end subroutine storage
 subroutine count
   integer i,j

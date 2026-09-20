@@ -2999,6 +2999,7 @@ SCC	MonProf	WekProf	DiuProf	Pollutant	"Countrystatecounty"	!	Comment
 30500258	262	7	24	-9								
 30500259	262	7	24	-9								
 30500260	262	7	24	-9								
+30500270        262     7       24      -9     
 30500290	262	6	10	-9								
 30500298	262	6	11	-9								
 30500299	262	6	10	-9								
@@ -4574,6 +4575,7 @@ SCC	MonProf	WekProf	DiuProf	Pollutant	"Countrystatecounty"	!	Comment
 31505001	262	7	24	-9								
 31505002	262	7	24	-9								
 31505003	262	7	24	-9								
+31604001        262     7       24      -9
 32099997	132	7	16	-9								
 32099998	132	7	1	-9								
 32099999	132	7	1	-9								

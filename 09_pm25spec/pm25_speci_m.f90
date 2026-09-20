@@ -125,8 +125,12 @@ subroutine lee
 	end do
 300 continue
 	do i=1,size(prof2)
-		print '(2i,<nclass>F)',prof2(i),i,(fclass(i,l),l=1,nclass)
-	end do
+#ifndef PGI
+      print '(2i,<nclass>F)',prof2(i),i,(fclass(i,l),l=1,nclass)
+#else
+      print '(2i10,6F10.4)',prof2(i),i,(fclass(i,l),l=1,nclass)
+#endif
+   end do
 	close(16)
 	return
 end subroutine lee
@@ -161,16 +165,22 @@ end subroutine calculos
 subroutine guarda
 implicit none
 	integer i,j,k
+    real suma
 	character(len=20)::fname
 	print *,maxval(emis),'Valor maximo'
 	do j=1,size(emis,dim=2)
+    suma=0.
 	fname=trim(cname(j))//'_M.txt'
 	open(unit=20,file=fname,action='write')
 	write(20,'(A,A)')cname(j), 'Emissions'
 	write(20,*) size(emis,dim=1),current_date,', ',cdia
 		do k=1,size(emis,dim=1)
-			write(20,'(I7,x,<nh>(ES11.4,x))')grid2(k),(emis(k,j,i),i=1,size(emis,dim=3))
-		end do
+			write(20,'(I7,x,24(ES11.4,x))')grid2(k),(emis(k,j,i),i=1,size(emis,dim=3))
+            do i=1,size(emis,dim=3)
+                suma=suma+emis(k,j,i)
+            end do
+        end do
+    write(6,*)cname(j),",",suma
 	close(20)
 	end do
     print *,"***** DONE PM25 MOVIL SPECIATION *****"

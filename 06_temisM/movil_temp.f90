@@ -13,7 +13,9 @@
 !   10/02/2015  Se indica que esta en g/h las emisiones.
 !
 module variables
-integer :: month,daytype
+integer :: month
+integer :: daytype ! tipo de dia 1 lun a 7 dom
+integer :: perfil  ! perfil temporal horario
 integer :: nf !number of emission files
 integer :: nnscc !max number of scc descriptors in input files
 integer :: nm ! line number in emissions file
@@ -30,7 +32,7 @@ real,allocatable :: emis(:,:,:) ! Emission by cel,file and hour (inorganic)
 real,allocatable :: evoc(:,:,:) ! VOC emissions cel,scc and hour
 real,allocatable :: epm2(:,:,:) ! PM2.5 emissions cel,scc and hour
 real,dimension(nnscc,nf) :: mes,dia, diap
-real,dimension(nnscc,nf,nh):: hCST,hMST,hPST
+real,dimension(nnscc,nf,nh):: hCST,hMST,hPST,hEST
 integer,dimension(3,nnscc,nf):: profile  ! 1=mon 2=weekday 3=hourly
 character (len=19) :: current_date
 
@@ -42,7 +44,7 @@ character(len=14),dimension(nf) ::efile,casn
 &           'TMSO2_2008.csv','TMPM102008.csv','TMPM2_2008.csv',&
 &           'TMCOV_2008.csv'/
 
-common /vars/ fweek,nscc,nm,month,daytype,mes,dia,hora,current_date
+common /vars/ fweek,nscc,nm,month,daytype,perfil,mes,dia,hora,current_date
 end module
 !
 !  Progran  atemporal.f90
@@ -230,7 +232,16 @@ subroutine lee
      do
 	    read(18,*,END=230)jscc,(itfrc(l),l=1,25)
 	    do i=1,nscc(k)
-	      if(jscc.eq.profile(3,i,k)) then
+          call adecua(profile(3,i,k),daytype,perfil)
+	      if(jscc.eq.perfil) then
+          m=4
+          do l=1,nh
+            if(m+l.gt.nh) then
+              hEST(i,k,m+l-nh)=real(itfrc(l))/real(itfrc(25))*diap(i,k)
+            else
+              hEST(i,k,m+l)=real(itfrc(l))/real(itfrc(25))*dia(i,k)
+            end if
+          end do
 		    m=5
 		    do l=1,nh
             if(m+l.gt.nh) then
@@ -263,7 +274,7 @@ subroutine lee
 !   print '(A3,x,I3,x,<nscc(k)>(f7.4))','hr',l,(hCST(i,k,l),i=1,nscc(k))
 !   end do
 
-     if(daytype.eq.1) then
+     if(daytype.eq.1 .or. daytype.ge.6) then !lunes, Sabado y Domingo
         inquire(19,opened=fil2)
         if(.not.fil2) then
             open(unit=19,file=nfilep,status='OLD',action='read')
@@ -274,24 +285,63 @@ subroutine lee
        do
           read(19,*,END=240)jscc,(itfrc(l),l=1,25)
           do i=1,nscc(k)
-            if(jscc.eq.profile(3,i,k)) then
+          call adecua(profile(3,i,k),daytype,perfil)
+            if(jscc.eq.perfil) then
+            m=4
+            do l=1,nh
+              if(daytype.eq.1 )then
+                if(m+l.gt.nh) then
+                  hEST(i,k,m+l-nh)=real(itfrc(l))/real(itfrc(25))*diap(i,k)
+                end if
+              else
+                if(m+l.gt.nh) then
+                  hEST(i,k,m+l-nh)=real(itfrc(l))/real(itfrc(25))*diap(i,k)
+                else
+                  hEST(i,k,m+l)=real(itfrc(l))/real(itfrc(25))*dia(i,k)
+                end if
+              end if  ! daytype
+            end do
             m=5
             do l=1,nh
+            if(daytype.eq.1) then
               if(m+l.gt.nh) then
                 hCST(i,k,m+l-nh)=real(itfrc(l))/real(itfrc(25))*diap(i,k)
               end if
+            else
+              if(m+l.gt.nh) then
+                hCST(i,k,m+l-nh)=real(itfrc(l))/real(itfrc(25))*diap(i,k)
+              else
+                hCST(i,k,m+l)=real(itfrc(l))/real(itfrc(25))*dia(i,k)
+              end if
+            end if !daytype
             end do
             m=6
             do l=1,nh
-              if(m+l.gt.nh) then
-                hMST(i,k,m+l-nh)=real(itfrc(l))/real(itfrc(25))*diap(i,k)
-              end if
+              if(daytype.eq.1) then
+                if(m+l.gt.nh) then
+                  hMST(i,k,m+l-nh)=real(itfrc(l))/real(itfrc(25))*diap(i,k)
+                end if
+              else
+                if(m+l.gt.nh) then
+                  hMST(i,k,m+l-nh)=real(itfrc(l))/real(itfrc(25))*diap(i,k)
+                else
+                  hMST(i,k,m+l)=real(itfrc(l))/real(itfrc(25))*dia(i,k)
+                end if
+              end if !daytype
             end do
             m=7
             do l=1,nh
-              if(m+l.gt.nh) then
-                hPST(i,k,m+l-nh)=real(itfrc(l))/real(itfrc(25))*diap(i,k)
-              end if
+              if(daytype.eq.1 )then
+                if(m+l.gt.nh) then
+                  hPST(i,k,m+l-nh)=real(itfrc(l))/real(itfrc(25))*diap(i,k)
+                end if
+              else
+                if(m+l.gt.nh) then
+                  hPST(i,k,m+l-nh)=real(itfrc(l))/real(itfrc(25))*diap(i,k)
+                else
+                  hPST(i,k,m+l)=real(itfrc(l))/real(itfrc(25))*dia(i,k)
+                end if
+              end if ! daytype
             end do
             end if
           end do !i
@@ -299,7 +349,7 @@ subroutine lee
     240 continue
 !
 !    do l=1,nh
-!    print '(A3,x,I3,x,<nscc(k)>(f7.4))','hr',l,(hCST(i,k,l),i=1,nscc(k))
+!        print '("Hr",x,I3,x,<nscc(k)>(f7.4))', l,(hCST(i,k,l),i=1,nscc(k))
 !    end do
 !
     end if
@@ -326,6 +376,7 @@ subroutine compute
 	  do i=1,nm
 		  do l=1,nh
 	        do j=1,nscc(k)
+      if(mst(i).eq.5) emis(i,k,l)=emis(i,k,l)+emiM(i,j,k)*mes(j,k)*hEST(j,k,l)*1000
 		if(mst(i).eq.6) emis(i,k,l)=emis(i,k,l)+emiM(i,j,k)*mes(j,k)*hCST(j,k,l)*1000
 		if(mst(i).eq.7) emis(i,k,l)=emis(i,k,l)+emiM(i,j,k)*mes(j,k)*hMST(j,k,l)*1000
 		if(mst(i).eq.8) emis(i,k,l)=emis(i,k,l)+emiM(i,j,k)*mes(j,k)*hPST(j,k,l)*1000
@@ -339,6 +390,7 @@ subroutine compute
    do i=1,nm
 		  do l=1,nh
 	        do j=1,nscc(k)
+   if(mst(i).eq.5) epm2(i,j,l)=epm2(i,j,l)+emiM(i,j,k)*mes(j,k)*hEST(j,k,l)*1000
 	if(mst(i).eq.6) epm2(i,j,l)=epm2(i,j,l)+emiM(i,j,k)*mes(j,k)*hCST(j,k,l)*1000
 	if(mst(i).eq.7) epm2(i,j,l)=epm2(i,j,l)+emiM(i,j,k)*mes(j,k)*hMST(j,k,l)*1000
 	if(mst(i).eq.8) epm2(i,j,l)=epm2(i,j,l)+emiM(i,j,k)*mes(j,k)*hPST(j,k,l)*1000
@@ -351,6 +403,7 @@ subroutine compute
    do i=1,nm
 		  do l=1,nh
 	        do j=1,nscc(k)
+   if(mst(i).eq.5) evoc(i,j,l)=evoc(i,j,l)+emiM(i,j,nf)*mes(j,nf)*hEST(j,nf,l)*1000
 	if(mst(i).eq.6) evoc(i,j,l)=evoc(i,j,l)+emiM(i,j,nf)*mes(j,nf)*hCST(j,nf,l)*1000
 	if(mst(i).eq.7) evoc(i,j,l)=evoc(i,j,l)+emiM(i,j,nf)*mes(j,nf)*hMST(j,nf,l)*1000
 	if(mst(i).eq.8) evoc(i,j,l)=evoc(i,j,l)+emiM(i,j,nf)*mes(j,nf)*hPST(j,nf,l)*1000
@@ -397,11 +450,18 @@ subroutine storage
      end do
    end do
 	close(10)
-    print*,"*****  DONE MOVILE TEMPORAL *****"
+    print*,"*****  DONE MOBILE TEMPORAL *****"
 110 format(I7,",",I10,",",23(ES12.4,","),ES12.4)
 end subroutine storage
+!                       _
+!  ___ ___  _   _ _ __ | |_
+! / __/ _ \| | | | '_ \| __|
+!| (_| (_) | |_| | | | | |_
+! \___\___/ \__,_|_| |_|\__|
 subroutine count
   integer i,j
+  call hpsort
+
   idcel2(1)=idcel(1)
   j=1
   do i=2,nm
@@ -419,4 +479,54 @@ subroutine count
    evoc=0
    emp2=0
 end subroutine count
+subroutine hpsort
+implicit none
+integer n
+integer i,ir,j,l
+real rra
+n=size(idcel)
+if (n.lt.2) return
+l=n/2+1
+ir=n
+10 continue
+if(l.gt.1)then
+l=l-1
+rra=idcel(l)
+else
+rra=idcel(ir)
+idcel(ir)=idcel(1)
+ir=ir-1
+if(ir.eq.1)then
+idcel(1)=rra
+return
+endif
+endif
+i=l
+j=l+l
+20 if(j.le.ir)then
+if(j.lt.ir)then
+if(idcel(j).lt.idcel(j+1))j=j+1
+end if
+if(rra.lt.idcel(j))then
+idcel(i)=idcel(j)
+i=j
+j=j+j
+else
+j=ir+1
+endif
+goto 20
+endif
+idcel(i)=rra
+goto 10
+end subroutine hpsort
+
+subroutine adecua(perfili,idia,perfilo)
+implicit none
+integer, INTENT(IN)  :: perfili,idia
+integer, INTENT(OUT) :: perfilo
+
+if (perfili.eq.2012) then; perfilo=perfili+(idia-1)*100
+else;perfilo=perfili;end if
+
+end subroutine adecua
 end program atemporal

@@ -129,7 +129,7 @@ implicit none
 	 read(10,*,err=110)lat(i),lon(i),iscc(i),(e_mis(i,j),j=1,nsp),capa(i)
 	end do
 	close(10)
-        e_mis=e_mis*1000 !para kg desde TON
+        e_mis=e_mis*1000000 !para g desde (Mg) TON
         print *,'Done puntual.csv ',cvar,maxval(e_mis)
 !
 !	temporal_01.txt
@@ -365,10 +365,10 @@ subroutine guarda
 		close(unit=10)
 	end do
      print *,"****** DONE PUNTUAL *****"
-210 format(I8,',',I3,',',23(ES,","),ES)
-220 format(f10.6,',',f10.4,',',I3,',',23(ES,","),ES)
-300 format(I10,',',f10.6,',',f10.4,',',I3,',',23(ES,","),ES)
-310 format(I10,',',I8,',',I3,',',23(ES,","),ES)
+210 format(I8,',',I3,',',23(E0.4,","),E0.4)
+220 format(f10.6,',',f10.4,',',I3,',',23(E0.4,","),E0.4)
+300 format(I10,',',f10.6,',',f10.4,',',I3,',',23(E0.4,","),E0.4)
+310 format(I10,',',I8,',',I3,',',23(E0.4,","),E0.4)
 end subroutine guarda
 !
    Subroutine localization(xlat,xlon,mi,mj,clat,clon,ist,jst,nst)

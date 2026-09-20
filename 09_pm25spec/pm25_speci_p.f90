@@ -20,7 +20,7 @@
 !
 module var_spmp
 integer :: nh     !number of hours in a day
-integer :: nclass !number the clasess in profiles_spc.txt
+integer :: nclass !number the clasess in pm25_profiles.csv
 integer lfa  ! line number in area file TPM252008.txt
 integer,allocatable ::grid(:)   ! grid id from emissions file
 integer,allocatable ::grid2(:)   ! different grid id from emissions file
@@ -66,19 +66,20 @@ subroutine lee
 	read(10,*) lfa,current_date,cdia  ! header
 	i=0
 	do 
-	read(10,*,end=100) cdum 
-	i=i+1
+        read(10,*,end=100) cdum
+        i=i+1
 	end do
 100 continue
 	print *,'Number of lines=',i,lfa
 	lfa=i
 	allocate(grid(lfa),iscc(lfa),ea(lfa,nh),profile(lfa),capa(lfa))
-	profile=99999
+	profile=0
+    ea=0.0
 	rewind(10)
 	read (10,*) cdum  ! header 1
 	read (10,*) cdum  ! header 2
 	do i=1,lfa
-	read (10,*)iscc(i),grid(i),capa(i),(ea(i,j),j=1,nh)
+        read (10,*)iscc(i),grid(i),capa(i),(ea(i,j),j=1,nh)
 	end do
 	close(10)
 ! READING  and findign profiles
@@ -93,8 +94,8 @@ subroutine lee
 		end do
 	end do
 200 continue
-	do i=1,60
-	 if(profile(i).eq.0) print *,iscc(i),' ',i
+	do i=1,lfa
+	 if(profile(i).eq.0) print *,'No profile: ',iscc(i),' ',i
 	end do
 	close(15)
 	!print '(15I5)',(profile(i),i=1,lfa)
@@ -107,7 +108,7 @@ subroutine lee
 	open(unit=16,file=fname,status='old',action='read')
 	read(16,*)cdum
 	read(16,*) nclass
-	if(nclass.gt.30) stop "Change size in fagg dimension"
+	if(nclass.gt.5) stop "Change size in fagg dimension"
 	rewind(16)
 	allocate(cname(nclass))
 	read(16,*)cdum
@@ -172,13 +173,20 @@ implicit none
 	write(20,*) size(grid2),current_date,', ',cdia
 		do k=1,size(emis,dim=1)
             if(emis(k,j,1).ne.0 .and. emis(k,j,12).ne.0 .and. emis(k,j,23).ne.0 )then
-			write(20,'(I7,x,I3,x,<nh>(ES11.4,x))')grid2(k),capa(k),(emis(k,j,i),i=1,size(emis,dim=3))
-            end if
+                write(20,'(I7,x,I3,x,24(ES11.4,x))')grid2(k),capa(k),(emis(k,j,i),i=1,size(emis,dim=3))
+
+           end if
 		end do
+   write(6,*)cname(j),",",SUM(emis(:,j,:))
 	close(20)
 	end do
     print *,"*****  DONE PM2.5 POINT SPECIATION  *****"
 end subroutine guarda
+!                       _
+!  ___ ___  _   _ _ __ | |_
+! / __/ _ \| | | | '_ \| __|
+!| (_| (_) | |_| | | | | |_
+! \___\___/ \__,_|_| |_|\__|
 subroutine count
 	integer i,j,nn
 	logical,allocatable::xl(:)
@@ -186,7 +194,7 @@ subroutine count
 	allocate(xl(nn))
 	xl=.true.
 	do i=1,nn-1
-		do j=i+1,41!nn
+		do j=i+1,nn
 			if(profile(j).eq.profile(i).and.xl(j)) 	xl(j)=.false.
 		end do
 	end do
