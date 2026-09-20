@@ -1,61 +1,73 @@
-# === Compilacion y temporales ===
+# ============================================================
+#  .gitignore para mexico_2008
+#  Solo se versionan: codigo fuente (.f90 .F90), scripts de
+#  configuracion/ejecucion (.sh.in, .am, .ac) y README.
+#  Los datos de entrada/salida (CSV, TXT, NC, XLS*) NO.
+# ============================================================
+
+# --- Sistema / macOS ---
 .DS_Store
-# Datos de salida en 11_annual (no versionar)
-11_annual/*.nc
-*.[oa]
 *~
+
+# --- Compilacion ---
+*.[oa]
 *.mod
 *.MOD
 *.exe
+*.out
 a.out
-salida*
+
+# --- Logs ---
 *.log
+
+# ============================================================
+#  DATOS DE ENTRADA Y SALIDA (no versionar — demasiado grandes)
+# ============================================================
+
+# Todos los CSV de datos (entrada y salida de los programas)
+*.csv
+*.CSV
+
+# Todos los TXT de salida de especiacion
+*.txt
+# EXCEPCIONES: mantener archivos de texto que son configuracion
+!**/namelist*.nml
+
+# NetCDF (salidas de 10_storage y 11_annual)
+*.nc
+*.NC
+
+# Hojas de calculo (datos de referencia grandes)
+*.xls
 *.xlsx
+*.XLS
+*.XLSX
+
+# PostScript / graficas
+*.ps
+
+# ZIP de datos
+*.zip
+
+# Archivos de salida numerados (salida.1, salida.2 ...)
+salida*
+
+# Archivos temporales especificos
 .tmpfile
 libnetcdf*
 
-# === Datos intermedios y salidas de cada directorio ===
-# 01_pob
-01_pob/*.csv
+# 03_movilspatial — resultados intermedios
+03_movilspatial/salida*.csv
 
-# 02_aemis
-02_aemis/A*08.csv
-02_aemis/ANH3_2008.csv
+# 04_temis — enlace simbolico de anio (generado en tiempo de ejecucion)
+04_temis/anio2008.csv
 
-# 04_temis
-04_temis/TA*csv
-
-# 05_semisM
-05_semisM/M_*.csv
-
-# 06_temisM
-06_temisM/TM*.csv
-06_temisM/GSO4_M.csv
-06_temisM/OTHE_M.csv
-06_temisM/POA_M.csv
-
-# 07_puntual
-07_puntual/T_ANN*.csv
-
-# 08_spec
-08_spec/RA*txt
-08_spec/SAP*txt
-08_spec/CBM05*txt
-08_spec/MOZART*txt
-08_spec/profile_mech.csv
-
-# 09_pm25spec
-09_pm25spec/*A.txt
-09_pm25spec/*P.txt
-09_pm25spec/*M.txt
-
-# 10_storage
+# 10_storage — salidas WRF-Chem
 10_storage/wrfc*
 
-# PostScript y otros
-ncview.*.ps
-
-# === Archivos generados por Autotools (no versionar) ===
+# ============================================================
+#  ARCHIVOS GENERADOS POR AUTOTOOLS (no versionar)
+# ============================================================
 Makefile
 Makefile.in
 */Makefile
@@ -67,6 +79,5 @@ config.status
 config.log
 configure
 configure~
-
 # Generado por configure a partir de ejecuta.sh.in
 ejecuta.sh

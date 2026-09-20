@@ -96,8 +96,8 @@
 	close(20)
 100 format('#ORL  '/'#TYPE     Mobile Source Criteria Inventory'/&
 &'#COUNTRY  MX'/'#YEAR     2008'/'#DESC     Draft 2008 version 1.0')
-120 format(A5,",",A10,",",A4,",",F,",",F,",,,,",A2,',semarnat_computed,2008')
-121 format(A5,",",A10,",",A3,",",F,",",F,",,,,",A2,',semarnat_computed,2008')
-122 format(A5,",",A10,",",A2,",",F,",",F,",,,,",A2,',semarnat_computed,2008')	 
+120 format(A5,",",A10,",",A4,",",F0.4,",",F0.4,",,,,",A2,',semarnat_computed,2008')
+121 format(A5,",",A10,",",A3,",",F0.4,",",F0.4,",,,,",A2,',semarnat_computed,2008')
+122 format(A5,",",A10,",",A2,",",F0.4,",",F0.4,",,,,",A2,',semarnat_computed,2008')	 
 	end subroutine
 	end program

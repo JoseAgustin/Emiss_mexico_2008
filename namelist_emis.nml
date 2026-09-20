@@ -1,0 +1,19 @@
+!
+!   Definicion de variables para calculo del Inventario
+!
+&region_nml
+zona ="centro"
+/
+&fecha_nml
+idia=31
+month=10
+anio=2018
+periodo=1
+/
+&verano_nml
+lsummer = .false.
+/
+&chem_nml
+mecha='radm2'
+model=1
+/
