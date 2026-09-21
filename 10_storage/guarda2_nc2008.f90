@@ -43,12 +43,16 @@ module vars
 	'E_MGLY ','E_MVK  ','E_OL2  ','E_OLI  ','E_OLT  ','E_ORA1 ','E_ORA2 ', &
 	'E_TOL  ','E_XYL  ','E_PM_10','E_PM25 ','E_SO4I ','E_NO3I ','E_PM25I',&
 	'E_ORGI ','E_ECI  ','E_SO4J ','E_NO3J ','E_PM25J','E_ORGJ ','E_ECJ  '/)
-    character(len=16),dimension(radm):: cname=(/'Carbon Monoxide ','NH3             ','NO              ', &
-	'NO2  ','SO2  ','ALDEHYDES  ','METHANE','CRESOL','Ethane','Glyoxal', &
-	'HC3  ','HC5  ','HC8  ','HCHO ','ISOPRENE','Acetone','Acrolein', &
-	'MGLY ','Methyl Vinil Ketone  ','Alkenes','alkenes   ','Terminal Alkynes','Formic Acid','Acetic Acid ', &
-	'TOLUENE  ','XYLENE  ','PM_10','PM_25 ','Sulfates ','Nitrates ','PM25I',&
-	'Organic ','Elemental Carbon  ','SulfatesJ','NitratesJ','PM25J','Organic','Elemental Carbon'/)
+    character(len=16),dimension(radm):: cname=(/&
+'Carbon Monoxide ','NH3             ','NO              ', &
+'NO2             ','SO2             ','ALDEHYDES       ','METHANE         ','CRESOL          ',&
+'Ethane          ','Glyoxal         ','HC3             ','HC5             ','HC8             ',&
+'Formaldehyde    ','Isoprene        ','Acetone         ','Acrolein        ','MGLY            ',&
+'Methyl Vinil Ket','Alkenes 2       ','alkenes         ','Terminal Alkynes','Formic Acid     ',&
+'Acetic Acid     ','Toluene         ','Xylene          ','PM 10um         ',&
+'PM 2.5um        ','Sulfates        ','Nitrates        ','PM 2.5 I        ','Organic         ',&
+'Elemental Carbon','Sulfates J mode ','Nitrates J mode ','PM 2.5 J mode   ','Organic J mode  ',&
+'Elemental Carbon'/)
     character (len=19) :: current_date,current_datem,mecha
 
 

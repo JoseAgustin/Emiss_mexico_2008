@@ -61,9 +61,9 @@ contains
 		close(20)
 	100 format('#ORL  '/'#TYPE    Nonroad Source Criteria Inventory'/&
 &'#COUNTRY  MX'/'#YEAR     2005'/'#DESC     Draft 2005 version 1.0')	
-120 format(A5,",",A10,",",A4,",",F,",",F,",,,,",A2,',semarnat_computed,2005,')	 
-121 format(A5,",",A10,",",A3,",",F,",",F,",,,,",A2,',semarnat_computed,2005,')	 
-122 format(A5,",",A10,",",A2,",",F,",",F,",,,,",A2,',semarnat_computed,2005,')	 
+120 format(A5,",",A10,",",A4,",",F0.4,",",F0.4,",,,,",A2,',semarnat_computed,2005,')	 
+121 format(A5,",",A10,",",A3,",",F0.4,",",F0.4,",,,,",A2,',semarnat_computed,2005,')	 
+122 format(A5,",",A10,",",A2,",",F0.4,",",F0.4,",,,,",A2,',semarnat_computed,2005,')	 
  
 	end subroutine
 	!

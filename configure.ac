@@ -11,7 +11,7 @@ AC_CONFIG_SRCDIR([02_aemis/area_espacial.f90])
 AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CANONICAL_HOST
-AM_INIT_AUTOMAKE([foreign 1.13 -Wall subdir-objects])
+AM_INIT_AUTOMAKE([foreign 1.13 -Wall subdir-objects no-dependencies])
 AM_MAINTAINER_MODE([enable])
 
 # ---------------------------------------------------------------------
@@ -24,6 +24,7 @@ AC_PROG_FC([ifx ifort gfortran nvfortran flang pgf90])
 AS_IF([test -z "$ja_user_FCFLAGS"], [FCFLAGS=""])
 AC_LANG([Fortran])
 AC_FC_SRCEXT([f90])
+AC_FC_PP_SRCEXT([F90])
 AC_FC_FREEFORM
 
 # ---------------------------------------------------------------------
